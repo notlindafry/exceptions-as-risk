@@ -40,7 +40,6 @@ a { color:var(--accent); text-decoration:none; } a:hover { text-decoration:under
 header .eyebrow { color:var(--accent); font-size:10.5px; font-weight:600; letter-spacing:0.07em; text-transform:uppercase; }
 header h1 { font-size:30px; margin:6px 0 4px; color:var(--text-strong); }
 header .meta { color:var(--text-muted); font-size:13.5px; }
-.wip-tag { font-size:28px; vertical-align:middle; letter-spacing:0.04em; color:var(--status-below-tint); font-weight:600; }
 .lede { color:var(--text); font-size:13.5px; margin:16px 0 0; max-width:900px; }
 /* grid: three question columns; each element is a full-width header over its row */
 .qgrid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:12px; margin:24px 0 0; }
@@ -132,7 +131,7 @@ def _grid(e: QBREngine) -> str:
     exc_d, dev_d, _ = e.days_to_decide()
     ck = e.can_kicking()
     afe = e.answered_from_existing()
-    tat = e.turnaround()
+    hba = e.handled_by_ai()
     cons_now, cons_ret = e.consumers()
 
     intake_target = e.graph.sla.raw.get("risk_intake_to_scored_days", 10)
@@ -207,11 +206,10 @@ def _grid(e: QBREngine) -> str:
              "good" if (afe.pct or 0) >= 60 else "watch",
              f"{afe.n} of {afe.d} requests",
              "customer and auditor requests satisfied by an existing artifact, not net-new work"),
-            (f"{tat:g} day" + ("s" if (tat or 0) != 1 else "") if tat is not None else "—",
-             "average customer inquiry turnaround",
-             "good" if (tat is not None and tat <= 5) else "watch",
-             "median this quarter",
-             "median across customer and auditor requests closed this quarter"),
+            (_pct(hba.n, hba.d), "of inquiries handled by AI",
+             "good" if (hba.pct or 0) >= 60 else "watch",
+             f"{hba.n} of {hba.d} requests",
+             "customer and auditor requests resolved end to end by AI, no person in the loop"),
             (str(len(cons_now)), "teams consuming our data",
              "good" if cons_ret.n >= cons_ret.d and cons_ret.d > 0 else "watch",
              (f"{cons_ret.n} of {cons_ret.d} prior returned" if cons_ret.d else "first quarter"),
@@ -306,7 +304,7 @@ def build_qbr_page(e: QBREngine) -> str:
         '<div class="wrap">'
         + _tab_bar("grc")
         + '<header><div class="eyebrow">Company Corp · GRC quarterly review</div>'
-        '<h1>GRC QBR <span class="wip-tag">[WIP]</span></h1>'
+        '<h1>GRC QBR</h1>'
         f'<div class="meta">For the head of GRC · {e.period_key} · <b>synthetic data</b>, git-native YAML</div>'
         '<p class="lede">Three questions, five ways: is the program doing its job, is it efficient, and '
         'does it add value to the business? Read left to right for one program element; read a column '
@@ -328,7 +326,7 @@ def build_qbr_page(e: QBREngine) -> str:
         '<!doctype html><html lang="en"><head><meta charset="utf-8">'
         '<meta name="viewport" content="width=device-width, initial-scale=1">'
         '<meta name="robots" content="noindex, nofollow">'
-        '<title>Company Corp — GRC QBR [WIP]</title>'
+        '<title>Company Corp — GRC QBR</title>'
         '<link rel="preconnect" href="https://fonts.googleapis.com">'
         '<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>'
         '<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&'

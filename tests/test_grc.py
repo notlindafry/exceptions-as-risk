@@ -108,7 +108,8 @@ def test_act_when_it_slips(e):
 
 def test_prove_it(e):
     assert e.answered_from_existing().n == 9
-    assert e.turnaround() == 1
+    hba = e.handled_by_ai()
+    assert hba.n == 8 and hba.d == 12  # 8 of 12 requests resolved end to end by AI
     now, ret = e.consumers()
     assert len(now) == 4 and ret.n == ret.d == 2  # all prior consumers returned
 
@@ -124,10 +125,10 @@ def test_team_okrs_wins(e):
 # --- Page acceptance (Part 5) ----------------------------------------------
 
 
-def test_page_shell_and_wip(page):
+def test_page_shell(page):
     assert page.startswith("<!doctype html>")
     assert 'name="robots" content="noindex, nofollow"' in page
-    assert page.count("[WIP]") >= 1  # acceptance 9: once, in the title
+    assert "[WIP]" not in page  # WIP marker removed from tab and header
     assert 'href="dashboard.html"' in page  # tab to the engineering profile
 
 

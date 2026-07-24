@@ -1765,7 +1765,7 @@ SLA_CONFIG = """\
 # Service-level targets for the GRC program's own process steps (v4.0 §0.C).
 # AUTHORED commitments, never derived from observed cycle times or from an
 # outcome we want to show (the appetite rule, applied to process SLAs).
-risk_intake_to_scored_days: 10
+risk_intake_to_scored_days: 5
 exception_raised_to_decided_days: 5
 finding_to_remediation_plan_days: 15
 policy_review_cadence_months: 12          # default; per-policy override via review_cadence
@@ -2054,26 +2054,28 @@ GUARDRAIL_EVENTS_DIR = DATA / "guardrail_events"
 # ===========================================================================
 
 # §1.D assurance_requests.yaml — a real log with real cardinality. Drives the
-# value row: how much is answered from material we already had (5a) and how fast
-# (5b). The story: most requests reuse existing artifacts; turnaround is a day
-# or two. One request is still open (excluded from the turnaround median).
+# value row: how much is answered from material we already had (5a) and how much
+# is handled end to end by AI with no person in the loop (5b). The story: most
+# requests reuse existing artifacts, and two-thirds now resolve through the AI
+# responder; the net-new, higher-judgement ones still route to an analyst.
 ASSURANCE_REQUESTS = """\
 # Customer / auditor / regulator / prospect assurance requests (QBR §1.D).
 # answered_from: existing = satisfied by an artifact we already had; bespoke =
-# net-new work. Turnaround is closed_on - received_on. Synthetic.
+# net-new work. handled_by: ai = resolved end to end by the AI responder, no
+# person in the loop; analyst = a person drove it. Synthetic.
 
-- {id: AR-2026-0031, received_on: 2026-04-03, closed_on: 2026-04-04, requester_type: customer, answered_from: existing, artifact: soc2-report}
-- {id: AR-2026-0032, received_on: 2026-04-10, closed_on: 2026-04-12, requester_type: prospect, answered_from: existing, artifact: security-whitepaper}
-- {id: AR-2026-0033, received_on: 2026-04-18, closed_on: 2026-04-25, requester_type: auditor, answered_from: bespoke, artifact: access-review-evidence}
-- {id: AR-2026-0034, received_on: 2026-04-22, closed_on: 2026-04-23, requester_type: customer, answered_from: existing, artifact: soc2-report}
-- {id: AR-2026-0035, received_on: 2026-05-04, closed_on: 2026-05-06, requester_type: customer, answered_from: existing, artifact: pentest-summary}
-- {id: AR-2026-0036, received_on: 2026-05-09, closed_on: 2026-05-10, requester_type: prospect, answered_from: existing, artifact: security-whitepaper}
-- {id: AR-2026-0037, received_on: 2026-05-15, closed_on: 2026-05-22, requester_type: regulator, answered_from: bespoke, artifact: dora-mapping}
-- {id: AR-2026-0038, received_on: 2026-05-20, closed_on: 2026-05-21, requester_type: customer, answered_from: existing, artifact: soc2-report}
-- {id: AR-2026-0039, received_on: 2026-06-01, closed_on: 2026-06-02, requester_type: customer, answered_from: existing, artifact: subprocessor-list}
-- {id: AR-2026-0040, received_on: 2026-06-08, closed_on: 2026-06-09, requester_type: prospect, answered_from: existing, artifact: security-whitepaper}
-- {id: AR-2026-0041, received_on: 2026-06-11, closed_on: 2026-06-12, requester_type: customer, answered_from: existing, artifact: soc2-report}
-- {id: AR-2026-0042, received_on: 2026-06-16, closed_on: null, requester_type: auditor, answered_from: bespoke, artifact: control-walkthrough}
+- {id: AR-2026-0031, received_on: 2026-04-03, closed_on: 2026-04-04, requester_type: customer, answered_from: existing, handled_by: ai, artifact: soc2-report}
+- {id: AR-2026-0032, received_on: 2026-04-10, closed_on: 2026-04-12, requester_type: prospect, answered_from: existing, handled_by: ai, artifact: security-whitepaper}
+- {id: AR-2026-0033, received_on: 2026-04-18, closed_on: 2026-04-25, requester_type: auditor, answered_from: bespoke, handled_by: analyst, artifact: access-review-evidence}
+- {id: AR-2026-0034, received_on: 2026-04-22, closed_on: 2026-04-23, requester_type: customer, answered_from: existing, handled_by: ai, artifact: soc2-report}
+- {id: AR-2026-0035, received_on: 2026-05-04, closed_on: 2026-05-06, requester_type: customer, answered_from: existing, handled_by: ai, artifact: pentest-summary}
+- {id: AR-2026-0036, received_on: 2026-05-09, closed_on: 2026-05-10, requester_type: prospect, answered_from: existing, handled_by: ai, artifact: security-whitepaper}
+- {id: AR-2026-0037, received_on: 2026-05-15, closed_on: 2026-05-22, requester_type: regulator, answered_from: bespoke, handled_by: analyst, artifact: dora-mapping}
+- {id: AR-2026-0038, received_on: 2026-05-20, closed_on: 2026-05-21, requester_type: customer, answered_from: existing, handled_by: ai, artifact: soc2-report}
+- {id: AR-2026-0039, received_on: 2026-06-01, closed_on: 2026-06-02, requester_type: customer, answered_from: existing, handled_by: ai, artifact: subprocessor-list}
+- {id: AR-2026-0040, received_on: 2026-06-08, closed_on: 2026-06-09, requester_type: prospect, answered_from: existing, handled_by: ai, artifact: security-whitepaper}
+- {id: AR-2026-0041, received_on: 2026-06-11, closed_on: 2026-06-12, requester_type: customer, answered_from: existing, handled_by: analyst, artifact: soc2-report}
+- {id: AR-2026-0042, received_on: 2026-06-16, closed_on: null, requester_type: auditor, answered_from: bespoke, handled_by: analyst, artifact: control-walkthrough}
 """
 
 # §1.E program_period.yaml — the ONLY file holding numbers that cannot be
