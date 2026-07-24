@@ -42,21 +42,19 @@ header h1 { font-size:30px; margin:6px 0 4px; color:var(--text-strong); }
 header .meta { color:var(--text-muted); font-size:13.5px; }
 .wip-tag { font-size:28px; vertical-align:middle; letter-spacing:0.04em; color:var(--status-below-tint); font-weight:600; }
 .lede { color:var(--text); font-size:13.5px; margin:16px 0 0; max-width:900px; }
-/* grid */
-.grid { width:100%; border-collapse:separate; border-spacing:10px; margin:22px 0 0; table-layout:fixed; }
-.grid th { text-align:left; color:var(--text-muted); font-size:11px; font-weight:500; text-transform:uppercase;
-  letter-spacing:0.05em; padding:0 6px 2px; vertical-align:bottom; }
-.grid th.qcol { color:var(--text); font-size:12.5px; }
-.grid td { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius);
-  padding:14px 16px; vertical-align:top; }
-.elname { background:none !important; border:none !important; padding:14px 6px !important; }
-.elname .en { font-family:var(--font-display); font-weight:600; font-size:15px; color:var(--text-strong); }
-.elname .eq { display:block; color:var(--text-muted); font-size:11.5px; margin-top:3px; line-height:1.4; }
-.cell .fig { font-size:22px; color:var(--text-strong); line-height:1.15; }
-.cell .fig .unit { color:var(--text-muted); font-weight:500; }
-.cell .cap { color:var(--text-muted); font-size:11.5px; margin-top:7px; line-height:1.45; }
-.cell .two { font-size:19px; color:var(--text-strong); font-family:var(--font-display); font-weight:600; }
-.st { display:inline-flex; align-items:baseline; gap:5px; font-size:11.5px; font-weight:600; margin-top:7px; }
+/* grid: three question columns; each element is a full-width header over its row */
+.qgrid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:12px; margin:24px 0 0; }
+.qh { color:var(--text); font-size:12px; font-weight:600; text-transform:uppercase; letter-spacing:0.05em;
+  padding:0 2px 2px; }
+.elhead { grid-column:1 / -1; margin-top:14px; }
+.elhead .en { font-family:var(--font-display); font-weight:600; font-size:16px; color:var(--text-strong); }
+.elhead .eq { color:var(--text-muted); font-size:12.5px; margin-left:10px; }
+.cell { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:14px 16px; }
+.cell .fig { font-size:23px; color:var(--text-strong); line-height:1.2; }
+.cell .fig .unit { color:var(--text); font-weight:500; font-size:15px; }
+.cell .two { font-size:16px; color:var(--text-strong); font-family:var(--font-display); font-weight:600; }
+.cell .cap { color:var(--text-muted); font-size:11.5px; margin-top:8px; line-height:1.5; }
+.st { display:inline-flex; align-items:baseline; gap:5px; font-size:11.5px; font-weight:600; margin-top:8px; }
 .st .dot { width:8px; height:8px; border-radius:50%; display:inline-block; }
 .st-at { color:var(--status-at); } .st-below { color:var(--status-below-tint); } .st-over { color:var(--status-over); }
 /* blocks below the grid */
@@ -83,7 +81,7 @@ header .meta { color:var(--text-muted); font-size:13.5px; }
 .absent b { color:var(--text); }
 footer { margin-top:34px; color:var(--text-faint); font-size:12px; max-width:900px; line-height:1.6; }
 .trace { color:var(--text-faint); font-size:10.5px; margin-top:10px; }
-@media (max-width:900px){ .grid,.tri,.wins{display:block;} .grid td,.tri>*,.wins>*{margin-bottom:10px;} }
+@media (max-width:900px){ .qgrid{grid-template-columns:1fr;} .tri,.wins{display:block;} .tri>*,.wins>*{margin-bottom:10px;} }
 """
 
 # Status level -> (css class, dot token). Conventional RAG (§0.10): green healthy,
@@ -102,12 +100,12 @@ def _status(level: str, word: str) -> str:
 
 
 def _cell(fig: str, unit: str, level: str, word: str, cap: str) -> str:
-    """A grid cell: a big number and a couple-word label of what it is, the
-    status word, then a smaller line of detail."""
+    """A grid cell: the number, a self-explanatory metric label beside it, the
+    status word, then smaller supporting detail."""
     unit_html = f' <span class="unit">{_esc(unit)}</span>' if unit else ""
     cap_html = f'<div class="cap">{_esc(cap)}</div>' if cap else ""
-    return (f'<td class="cell"><div class="fig">{fig}{unit_html}</div>'
-            f'{_status(level, word)}{cap_html}</td>')
+    return (f'<div class="cell"><div class="fig">{fig}{unit_html}</div>'
+            f'{_status(level, word)}{cap_html}</div>')
 
 
 def _pct(n: int, d: int) -> str:
@@ -148,86 +146,86 @@ def _grid(e: QBREngine) -> str:
 
     dev_note = "under a day on agent events" if (dev_d is not None and dev_d < 1) else "same on agent events"
     rows = [
-        # element, question, [(figure, unit-label, level, status word, small detail)]
+        # element, question, [(figure, metric label, level, status word, supporting detail)]
         ("See the risk", "Do we know what we're carrying?", [
-            (f"{ec.n}/{ec.d}", "units covered",
+            (f"{ec.n}/{ec.d}", "business units covered",
              "good" if ec.pct >= 90 else "watch",
              ("all covered" if not ec.detail else f"{', '.join(ec.detail)} uncovered"),
-             "business units with an owned, scored risk"),
-            (f"{ttu:g} days" if ttu is not None else "—", "to score a risk",
+             f"of {ec.d} business units, only {', '.join(ec.detail) or 'none'} has no owned, scored risk"),
+            (f"{ttu:g} days" if ttu is not None else "—", "to score a new risk",
              "good" if (ttu is not None and ttu <= intake_target) else "watch",
-             (f"target {intake_target}" if ttu is not None else "no new risks"),
-             "average from a risk being identified to scored, this quarter"),
-            (_pct(br.n, br.d), "business-raised",
+             (f"target {intake_target} days" if ttu is not None else "no new risks"),
+             "average from a risk being identified to scored and owned, this quarter"),
+            (_pct(br.n, br.d), "raised by the business",
              "good" if (br.pct or 0) >= 50 else "watch",
-             f"{br.n} of {br.d} this quarter",
-             "share of new risks the business raised, not us"),
+             f"{br.n} of {br.d} new risks",
+             "new risks the business flagged itself this quarter, rather than us finding them"),
         ]),
         ("Set the defense", "Is something standing behind the important risks?", [
-            (f'<span class="two">{dtr.n}/{dtr.d} top risks · {dob.n}/{dob.d} obligations</span>', "",
+            (f'<span class="two">{dtr.n}/{dtr.d} top risks · {dob.n}/{dob.d} obligations</span>', "covered",
              "good" if (not dtr.detail and not dob.detail) else "watch",
              ("both fully covered" if (not dtr.detail and not dob.detail) else "gaps remain"),
-             "top risks, and outside obligations, with a control behind them"),
-            (f"{opc:g}", "per control",
+             "top risks, and outside obligations, with at least one control behind them"),
+            (f"{opc:g}", "obligations per control",
              "good", (f"{len(multi)} do double duty" if multi else "one-to-one"),
-             "obligations covered per control, on average"),
-            (_pct(own.n, own.d), "owned in the business",
+             "how many outside obligations each mapped control covers, on average"),
+            (_pct(own.n, own.d), "controls owned in the business",
              "good" if (own.pct or 0) >= 80 else "watch",
              f"{own.n} of {own.d} controls",
-             "controls with a confirmed owner in the business"),
+             "controls with a named owner in the business who has confirmed it recently"),
         ]),
         ("Confirm it holds", "Do we have proof it's actually working?", [
-            (_pct(cp.n, cp.d), "proven",
+            (_pct(cp.n, cp.d), "top-risk controls proven",
              "good" if (cp.pct or 0) >= 90 else ("watch" if (cp.pct or 0) >= 50 else "bad"),
-             f"{cp.n} of {cp.d} top-risk controls",
-             "controls behind top risks with current proof they work"),
-            (_pct(pa.n, pa.d), "self-collecting",
+             f"{cp.n} of {cp.d} controls",
+             "of the controls behind our top risks, the share with current proof they work"),
+            (_pct(pa.n, pa.d), "proof collected automatically",
              "good" if (pa.pct or 0) >= 80 else "watch",
-             f"{pa.n} of {pa.d} automated",
-             "share of proof that collects itself, no person in the loop"),
-            (f"{ret.n} of {ret.d}", "came back",
+             f"{pa.n} of {pa.d} sources",
+             "share of our evidence that collects itself, with no person in the loop"),
+            (f"{ret.n} of {ret.d}", "closed problems recurred",
              "good" if ret.n == 0 else "watch",
              ("none returned" if ret.n == 0 else "one returned"),
-             "problems closed this quarter that had returned before"),
+             "problems we closed this quarter that had been closed once before"),
         ]),
         ("Act when it slips", "When something slips, do we move?", [
-            (_pct(pp.n, pp.d), "past due",
+            (_pct(pp.n, pp.d), "commitments past due",
              "good" if (pp.pct or 0) <= 15 else ("watch" if (pp.pct or 0) <= 35 else "bad"),
              f"{pp.n} of {pp.d} open items",
-             "open commitments past the date they were promised by"),
-            (f"{exc_d:g} days" if exc_d is not None else "—", "to decide",
+             "open fixes and acceptances past the date they were promised by"),
+            (f"{exc_d:g} days" if exc_d is not None else "—", "to decide an exception",
              "good" if (exc_d is not None and exc_d <= decide_target) else "watch",
              dev_note,
-             f"to decide an exception (target {decide_target})"),
-            (str(len(ck)), "chronic re-dates",
+             f"median time to make the call; target {decide_target} days"),
+            (str(len(ck)), "items re-dated 3+ times",
              "good" if len(ck) == 0 else "watch",
              (f"{top_holder[0].split('@')[0]} holds {top_holder[1]}" if top_holder else "none"),
-             "items re-dated more than twice, and who is holding them"),
+             "acceptances pushed out again and again instead of being resolved"),
         ]),
         ("Prove it, inform decisions", "Can we show it, and does anyone use it?", [
-            (_pct(afe.n, afe.d), "reused",
+            (_pct(afe.n, afe.d), "answered from what we had",
              "good" if (afe.pct or 0) >= 60 else "watch",
              f"{afe.n} of {afe.d} requests",
-             "requests answered from material we already had"),
-            (f"{tat:g} day" + ("s" if (tat or 0) != 1 else "") if tat is not None else "—", "turnaround",
+             "customer and auditor requests met with a document we already had"),
+            (f"{tat:g} day" + ("s" if (tat or 0) != 1 else "") if tat is not None else "—", "to answer a request",
              "good" if (tat is not None and tat <= 5) else "watch",
              "median this quarter",
-             "to turn a customer or auditor request around"),
-            (str(len(cons_now)), "teams use it",
+             "typical turnaround from a customer or auditor asking to us answering"),
+            (str(len(cons_now)), "teams use our data",
              "good" if cons_ret.n >= cons_ret.d and cons_ret.d > 0 else "watch",
              (f"{cons_ret.n} of {cons_ret.d} prior returned" if cons_ret.d else "first quarter"),
-             "teams outside GRC that used our data this quarter"),
+             "counted automatically from how often our data is pulled into another team's dashboard or project"),
         ]),
     ]
 
-    head = ('<tr><th></th><th class="qcol">Doing its job?</th>'
-            '<th class="qcol">Efficient?</th><th class="qcol">Adding value?</th></tr>')
-    body = ""
+    qh = ('<div class="qh">Doing its job?</div><div class="qh">Efficient?</div>'
+          '<div class="qh">Adding value?</div>')
+    parts = [qh]
     for name, q, cells in rows:
-        body += (f'<tr><td class="elname"><span class="en">{_esc(name)}</span>'
-                 f'<span class="eq">{_esc(q)}</span></td>'
-                 + "".join(_cell(*c) for c in cells) + "</tr>")
-    return f'<table class="grid"><thead>{head}</thead><tbody>{body}</tbody></table>'
+        parts.append(f'<div class="elhead"><span class="en">{_esc(name)}</span>'
+                     f'<span class="eq">{_esc(q)}</span></div>')
+        parts += [_cell(*c) for c in cells]
+    return f'<div class="qgrid">{"".join(parts)}</div>'
 
 
 # ---------------------------------------------------------------------------
@@ -280,7 +278,7 @@ def _wins(e: QBREngine) -> str:
         f'<div class="txt">{_esc(w.get("text", ""))}</div></div>'
         for w in e.wins())
     return (
-        '<div class="block"><h2>Wins we can\'t measure</h2>'
+        '<div class="block"><h2>Quarterly highlights</h2>'
         '<p class="why">The three that mattered most this quarter — chosen for where the '
         '<b>business</b> did something, not where we did.</p>'
         f'<div class="wins">{cards}</div></div>')
