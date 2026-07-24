@@ -594,14 +594,11 @@ class QBREngine:
         existing = [r for r in reqs if r.get("answered_from") == "existing"]
         return Ratio(len(existing), len(reqs), note="requests answered from what we already had")
 
-    def turnaround(self) -> Optional[float]:
-        """5b. Median days to turn a request around (closed ones)."""
-        gaps = []
-        for r in self._requests_in_period():
-            rec, closed = _as_date(r.get("received_on")), _as_date(r.get("closed_on"))
-            if isinstance(rec, dt.date) and isinstance(closed, dt.date):
-                gaps.append((closed - rec).days)
-        return _median(gaps)
+    def handled_by_ai(self) -> Ratio:
+        """5b. Requests resolved end to end by the AI responder, no person in loop."""
+        reqs = self._requests_in_period()
+        ai = [r for r in reqs if r.get("handled_by") == "ai"]
+        return Ratio(len(ai), len(reqs), note="requests handled end to end by AI")
 
     def consumers(self) -> tuple[list[str], Ratio]:
         """5c. Teams outside GRC using our data, and how many came back."""

@@ -1,7 +1,7 @@
 # Service-level targets for the GRC program's own process steps (v4.0 §0.C).
 # AUTHORED commitments, never derived from observed cycle times or from an
 # outcome we want to show (the appetite rule, applied to process SLAs).
-risk_intake_to_scored_days: 10
+risk_intake_to_scored_days: 5
 exception_raised_to_decided_days: 5
 finding_to_remediation_plan_days: 15
 policy_review_cadence_months: 12          # default; per-policy override via review_cadence

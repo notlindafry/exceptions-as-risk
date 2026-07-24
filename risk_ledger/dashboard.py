@@ -1164,8 +1164,6 @@ _TABS_CSS = """
   white-space:nowrap; }
 .tab:hover { color:var(--text); text-decoration:none; }
 .tab-active { color:var(--text-strong); border-bottom-color:var(--accent); }
-.tab .tab-wip { color:var(--status-below-tint); font-size:11px; font-weight:600; vertical-align:middle;
-  margin-left:4px; letter-spacing:0.03em; }
 """
 
 # Source repo, linked from both page footers so the live Vercel site points back
@@ -1185,7 +1183,7 @@ _ANALYTICS = (
 )
 
 _TAB_ENG = "Engineering Org GRC Profile"
-_TAB_GRC = 'GRC QBR<span class="tab-wip">[WIP]</span>'
+_TAB_GRC = "GRC QBR"
 
 
 def _tab_bar(active: str) -> str:

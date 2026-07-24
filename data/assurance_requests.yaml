@@ -1,16 +1,17 @@
 # Customer / auditor / regulator / prospect assurance requests (QBR §1.D).
 # answered_from: existing = satisfied by an artifact we already had; bespoke =
-# net-new work. Turnaround is closed_on - received_on. Synthetic.
+# net-new work. handled_by: ai = resolved end to end by the AI responder, no
+# person in the loop; analyst = a person drove it. Synthetic.
 
-- {id: AR-2026-0031, received_on: 2026-04-03, closed_on: 2026-04-04, requester_type: customer, answered_from: existing, artifact: soc2-report}
-- {id: AR-2026-0032, received_on: 2026-04-10, closed_on: 2026-04-12, requester_type: prospect, answered_from: existing, artifact: security-whitepaper}
-- {id: AR-2026-0033, received_on: 2026-04-18, closed_on: 2026-04-25, requester_type: auditor, answered_from: bespoke, artifact: access-review-evidence}
-- {id: AR-2026-0034, received_on: 2026-04-22, closed_on: 2026-04-23, requester_type: customer, answered_from: existing, artifact: soc2-report}
-- {id: AR-2026-0035, received_on: 2026-05-04, closed_on: 2026-05-06, requester_type: customer, answered_from: existing, artifact: pentest-summary}
-- {id: AR-2026-0036, received_on: 2026-05-09, closed_on: 2026-05-10, requester_type: prospect, answered_from: existing, artifact: security-whitepaper}
-- {id: AR-2026-0037, received_on: 2026-05-15, closed_on: 2026-05-22, requester_type: regulator, answered_from: bespoke, artifact: dora-mapping}
-- {id: AR-2026-0038, received_on: 2026-05-20, closed_on: 2026-05-21, requester_type: customer, answered_from: existing, artifact: soc2-report}
-- {id: AR-2026-0039, received_on: 2026-06-01, closed_on: 2026-06-02, requester_type: customer, answered_from: existing, artifact: subprocessor-list}
-- {id: AR-2026-0040, received_on: 2026-06-08, closed_on: 2026-06-09, requester_type: prospect, answered_from: existing, artifact: security-whitepaper}
-- {id: AR-2026-0041, received_on: 2026-06-11, closed_on: 2026-06-12, requester_type: customer, answered_from: existing, artifact: soc2-report}
-- {id: AR-2026-0042, received_on: 2026-06-16, closed_on: null, requester_type: auditor, answered_from: bespoke, artifact: control-walkthrough}
+- {id: AR-2026-0031, received_on: 2026-04-03, closed_on: 2026-04-04, requester_type: customer, answered_from: existing, handled_by: ai, artifact: soc2-report}
+- {id: AR-2026-0032, received_on: 2026-04-10, closed_on: 2026-04-12, requester_type: prospect, answered_from: existing, handled_by: ai, artifact: security-whitepaper}
+- {id: AR-2026-0033, received_on: 2026-04-18, closed_on: 2026-04-25, requester_type: auditor, answered_from: bespoke, handled_by: analyst, artifact: access-review-evidence}
+- {id: AR-2026-0034, received_on: 2026-04-22, closed_on: 2026-04-23, requester_type: customer, answered_from: existing, handled_by: ai, artifact: soc2-report}
+- {id: AR-2026-0035, received_on: 2026-05-04, closed_on: 2026-05-06, requester_type: customer, answered_from: existing, handled_by: ai, artifact: pentest-summary}
+- {id: AR-2026-0036, received_on: 2026-05-09, closed_on: 2026-05-10, requester_type: prospect, answered_from: existing, handled_by: ai, artifact: security-whitepaper}
+- {id: AR-2026-0037, received_on: 2026-05-15, closed_on: 2026-05-22, requester_type: regulator, answered_from: bespoke, handled_by: analyst, artifact: dora-mapping}
+- {id: AR-2026-0038, received_on: 2026-05-20, closed_on: 2026-05-21, requester_type: customer, answered_from: existing, handled_by: ai, artifact: soc2-report}
+- {id: AR-2026-0039, received_on: 2026-06-01, closed_on: 2026-06-02, requester_type: customer, answered_from: existing, handled_by: ai, artifact: subprocessor-list}
+- {id: AR-2026-0040, received_on: 2026-06-08, closed_on: 2026-06-09, requester_type: prospect, answered_from: existing, handled_by: ai, artifact: security-whitepaper}
+- {id: AR-2026-0041, received_on: 2026-06-11, closed_on: 2026-06-12, requester_type: customer, answered_from: existing, handled_by: analyst, artifact: soc2-report}
+- {id: AR-2026-0042, received_on: 2026-06-16, closed_on: null, requester_type: auditor, answered_from: bespoke, handled_by: analyst, artifact: control-walkthrough}
