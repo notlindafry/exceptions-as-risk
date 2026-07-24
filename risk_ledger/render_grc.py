@@ -248,8 +248,8 @@ def _team_health(e: QBREngine) -> str:
         f'<div class="cap" style="margin-top:8px;color:var(--text)">{role_html}</div></div>'
         f'<div class="card"><div class="k">GRC team took time off this quarter</div>'
         f'<div class="fig" style="margin-top:6px">{took_off}%</div></div>'
-        f'<div class="card"><div class="k">Development budget used</div>'
-        f'<div class="fig" style="margin-top:6px">{t["dev_budget_pct"]}%</div></div>'
+        f'<div class="card"><div class="k">Filed a professional-development reimbursement</div>'
+        f'<div class="fig" style="margin-top:6px">{t["prof_dev_pct"]}%</div></div>'
         '</div></div>')
 
 

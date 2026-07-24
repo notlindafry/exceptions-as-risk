@@ -115,7 +115,7 @@ def test_prove_it(e):
 
 def test_team_okrs_wins(e):
     t = e.team_health()
-    assert t["no_time_off"] == 1 and t["dev_budget_pct"] == 38
+    assert t["no_time_off"] == 1 and t["prof_dev_pct"] == 40  # 2 of 5 filed
     assert len(t["open_roles"]) == 2
     assert sum(len(v) for v in e.okrs_by_theme().values()) == 2
     assert len(e.wins()) == 3
