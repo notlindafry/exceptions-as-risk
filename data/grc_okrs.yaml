@@ -2,28 +2,28 @@
 # ai-native | scalable | foundational. Progress is target vs current. Synthetic.
 
 - id: OKR-GRC-2026-H1-01
-  objective: "Make control evidence collect itself"
+  objective: "Automate 80% of all evidence collection"
   period_end: 2026-06-30
   theme: ai-native
   key_results:
     - title: "Evidence collected automatically"
-      target_pct: 90
+      target_pct: 80
       current_pct: 64
-      recent: "the payments team built a collector for their own controls this quarter, retiring a batch of manual pulls and freeing the audit team for higher-value work."
-    - title: "Controls with an automated test"
+      recent: "the payments team stood up a collector for their own controls, retiring a batch of manual pulls and returning audit hours to higher-value review."
+    - title: "Controls carrying an automated test"
       target_pct: 40
       current_pct: 22
-      recent: "the first controls that test themselves went live on the platform, catching two setup drifts before they reached a customer."
+      recent: "the first self-testing controls went into production, surfacing two configuration drifts before they reached a customer."
 - id: OKR-GRC-2026-H1-02
-  objective: "Take the human out of routine risk intake"
+  objective: "Auto-draft 50% of new risk intake"
   period_end: 2026-06-30
   theme: ai-native
   key_results:
-    - title: "New risks arrive as a draft a person just confirms"
+    - title: "New risk records auto-drafted for review"
       target_pct: 50
       current_pct: 30
-      recent: "intake now starts from an AI-drafted record, cutting the time from a risk being spotted to being scored and returning analyst hours to real review."
-    - title: "Findings attach themselves to the right control"
+      recent: "intake now opens from an AI-generated draft, compressing the time from identification to a scored, owned risk and returning analyst capacity to judgment work."
+    - title: "Findings auto-routed to their control"
       target_pct: 80
       current_pct: 55
-      recent: "findings now link to the control they touch on their own, so none sit unrouted waiting on a person to file them."
+      recent: "findings now attach to the control they affect automatically, so none wait unrouted on manual filing."
