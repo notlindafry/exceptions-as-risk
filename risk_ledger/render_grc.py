@@ -179,10 +179,10 @@ def _grid(e: QBREngine) -> str:
              "good" if (cp.pct or 0) >= 90 else ("watch" if (cp.pct or 0) >= 50 else "bad"),
              f"{cp.n} of {cp.d} controls",
              "of the controls behind our top risks, the share with current proof they work"),
-            (_pct(pa.n, pa.d), "proof collected automatically",
+            (_pct(pa.n, pa.d), "of evidence collection automated",
              "good" if (pa.pct or 0) >= 80 else "watch",
              f"{pa.n} of {pa.d} sources",
-             "share of our evidence that collects itself, with no person in the loop"),
+             "evidence sources that collect without a person in the loop"),
             (f"{ret.n} of {ret.d}", "closed problems recurred",
              "good" if ret.n == 0 else "watch",
              ("none returned" if ret.n == 0 else "one returned"),
@@ -203,18 +203,19 @@ def _grid(e: QBREngine) -> str:
              "acceptances pushed out again and again instead of being resolved"),
         ]),
         ("Prove it, inform decisions", "Can we show it, and does anyone use it?", [
-            (_pct(afe.n, afe.d), "answered from what we had",
+            (_pct(afe.n, afe.d), "artifact reuse",
              "good" if (afe.pct or 0) >= 60 else "watch",
              f"{afe.n} of {afe.d} requests",
-             "customer and auditor requests met with a document we already had"),
-            (f"{tat:g} day" + ("s" if (tat or 0) != 1 else "") if tat is not None else "—", "to answer a request",
+             "customer and auditor requests satisfied by an existing artifact, not net-new work"),
+            (f"{tat:g} day" + ("s" if (tat or 0) != 1 else "") if tat is not None else "—",
+             "average customer inquiry turnaround",
              "good" if (tat is not None and tat <= 5) else "watch",
              "median this quarter",
-             "typical turnaround from a customer or auditor asking to us answering"),
-            (str(len(cons_now)), "teams use our data",
+             "median across customer and auditor requests closed this quarter"),
+            (str(len(cons_now)), "teams consuming our data",
              "good" if cons_ret.n >= cons_ret.d and cons_ret.d > 0 else "watch",
              (f"{cons_ret.n} of {cons_ret.d} prior returned" if cons_ret.d else "first quarter"),
-             "counted automatically from how often our data is pulled into another team's dashboard or project"),
+             "downstream teams whose dashboards or pipelines pull GRC data, tracked automatically"),
         ]),
     ]
 
@@ -245,7 +246,7 @@ def _team_health(e: QBREngine) -> str:
         '<div class="tri">'
         f'<div class="card"><div class="k">Open roles &amp; how long</div>'
         f'<div class="cap" style="margin-top:8px;color:var(--text)">{role_html}</div></div>'
-        f'<div class="card"><div class="k">Took time off this quarter</div>'
+        f'<div class="card"><div class="k">GRC team took time off this quarter</div>'
         f'<div class="fig" style="margin-top:6px">{took_off}%</div></div>'
         f'<div class="card"><div class="k">Development budget used</div>'
         f'<div class="fig" style="margin-top:6px">{t["dev_budget_pct"]}%</div></div>'
@@ -279,8 +280,9 @@ def _wins(e: QBREngine) -> str:
         for w in e.wins())
     return (
         '<div class="block"><h2>Quarterly highlights</h2>'
-        '<p class="why">The three that mattered most this quarter — chosen for where the '
-        '<b>business</b> did something, not where we did.</p>'
+        '<p class="why">The quarter\'s most significant developments, weighted toward the '
+        '<b>business acting on its own risk</b> — the strongest evidence that the program creates '
+        'value, not just activity.</p>'
         f'<div class="wins">{cards}</div></div>')
 
 
