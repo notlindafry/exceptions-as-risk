@@ -2098,6 +2098,13 @@ PROGRAM_PERIOD = """\
       - {title: "Controls engineer", opened_on: 2026-04-19}
     no_time_off_count: 1
     dev_budget_used_pct: 38
+  # Wins we can't measure (§2.5): AI-harvested candidates, a human picked three.
+  # Prefer wins where the BUSINESS did something. Each names a team + a specific
+  # thing; where it explains a number that moved, it says so.
+  wins:
+    - {team: ai-platform, text: "Self-registered the agent-autonomy risk and drafted its own guardrail before we flagged it — part of why more than half of this quarter's new risks came from the business."}
+    - {team: data-platform, text: "An engineer caught a data-residency gap mid-migration and raised it as a risk on the spot, rather than waiting to be asked."}
+    - {team: platform-eng, text: "Wired the disaster-recovery failover test to emit its own proof automatically, closing a problem that had come back twice before."}
 2026-Q1:
   estate_units: [payments, platform, data-platform, trust-and-safety, privacy-legal,
                  ai-platform, corp-it]

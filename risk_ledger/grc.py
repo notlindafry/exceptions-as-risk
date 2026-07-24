@@ -346,7 +346,35 @@ def load_grc_graph(data_dir: Path) -> Graph:
                 continue
             deviations.append(Deviation.parse(raw, str(path)))
     graph.deviations = deviations
+
+    # QBR v4.0 files (§1.D–§1.F): the assurance-request log, the hand-kept
+    # per-quarter numbers, and the GRC team's own OKRs. Plain structures.
+    graph.assurance_requests = _load_yaml_seq(data_dir / "assurance_requests.yaml", errors)
+    graph.program_period = _load_yaml_map(data_dir / "program_period.yaml", errors)
+    graph.grc_okrs = _load_yaml_seq(data_dir / "grc_okrs.yaml", errors)
     return graph
+
+
+def _load_yaml_seq(path: Path, errors: list[str]) -> list:
+    if not path.exists():
+        return []
+    try:
+        raw = yaml.safe_load(path.read_text()) or []
+    except yaml.YAMLError as exc:
+        errors.append(f"{path}: invalid YAML ({exc})")
+        return []
+    return raw if isinstance(raw, list) else []
+
+
+def _load_yaml_map(path: Path, errors: list[str]) -> dict:
+    if not path.exists():
+        return {}
+    try:
+        raw = yaml.safe_load(path.read_text()) or {}
+    except yaml.YAMLError as exc:
+        errors.append(f"{path}: invalid YAML ({exc})")
+        return {}
+    return raw if isinstance(raw, dict) else {}
 
 
 # ---------------------------------------------------------------------------
@@ -754,3 +782,270 @@ class GRCEngine:
             "Deviations dispositioned in SLA": (
                 sum(1 for s in dev_measured if s.met), len(dev_measured)),
         }
+
+
+# ===========================================================================
+# QBR v4.0 — the business-review engine (Part 2). Fifteen metrics across five
+# program elements (the operating loop) and three questions, plus team health,
+# the GRC team's own OKRs, and the wins. Every figure names a denominator; no
+# composite. Reuses the engineering residual only to read which named risks sit
+# over appetite (for the "top risks" metrics 2a/3a); nothing here moves a number.
+# ===========================================================================
+
+
+def _median(xs: list[float]) -> Optional[float]:
+    xs = sorted(xs)
+    n = len(xs)
+    if n == 0:
+        return None
+    return xs[n // 2] if n % 2 else (xs[n // 2 - 1] + xs[n // 2]) / 2.0
+
+
+def _period_of(d: dt.date) -> tuple[str, dt.date, dt.date]:
+    """(key, start, end) of the calendar quarter containing ``d``."""
+    q = (d.month - 1) // 3 + 1
+    start = dt.date(d.year, 3 * (q - 1) + 1, 1)
+    if q == 4:
+        end = dt.date(d.year, 12, 31)
+    else:
+        end = dt.date(d.year, 3 * q + 1, 1) - dt.timedelta(days=1)
+    return f"{d.year}-Q{q}", start, end
+
+
+def _prior_period_key(key: str) -> str:
+    y, q = key.split("-Q")
+    y, q = int(y), int(q) - 1
+    if q == 0:
+        y, q = y - 1, 4
+    return f"{y}-Q{q}"
+
+
+@dataclass
+class Ratio:
+    """A coverage/currency figure and the exact set behind its denominator."""
+    n: int
+    d: int
+    note: str = ""
+    detail: list = field(default_factory=list)  # the items behind n or (d - n)
+
+    @property
+    def pct(self) -> Optional[int]:
+        return round(self.n / self.d * 100) if self.d else None
+
+
+class QBREngine:
+    """Computes the QBR page (Part 2) over the extended, validated corpus."""
+
+    def __init__(self, graph: Graph, config: Config):
+        self.graph = graph
+        self.config = config
+        self.problems: list[Issue] = validate_graph(graph, config)
+        self.eng = GraphEngine(graph, config)
+        self.as_of = config.as_of
+        self.period_key, self.p_start, self.p_end = _period_of(config.as_of)
+        self.prior_key = _prior_period_key(self.period_key)
+        self.period = graph.program_period.get(self.period_key, {}) or {}
+        self.prior = graph.program_period.get(self.prior_key, {}) or {}
+
+    # -- shared reads -------------------------------------------------------
+    def _over_appetite_risks(self) -> set[str]:
+        return {r.named_risk.id for r in self.eng.all_named_risk_residuals()
+                if r.state == "over"}
+
+    def _in_period(self, d) -> bool:
+        return isinstance(d, dt.date) and self.p_start <= d <= self.p_end
+
+    # -- Element 1: See the risk -------------------------------------------
+    def estate_coverage(self) -> Ratio:
+        """1a. Business units with >=1 owned, scored risk, over the unit list in
+        the current period block (a borrowed denominator, labelled business units)."""
+        units = self.period.get("estate_units", []) or []
+        covered = {u for nr in self.graph.named_risks.values()
+                   for u in _str_list(nr.raw.get("estate_units"))}
+        uncovered = [u for u in units if u not in covered]
+        return Ratio(len([u for u in units if u in covered]), len(units),
+                     note="business units with an owned, scored risk", detail=uncovered)
+
+    def time_to_understand(self) -> tuple[Optional[float], int]:
+        """1b. Median days from a risk being raised to scored, over risks raised
+        this quarter."""
+        gaps = []
+        for nr in self.graph.named_risks.values():
+            raised, scored = _as_date(nr.raw.get("raised_on")), _as_date(nr.raw.get("scored_on"))
+            if self._in_period(raised) and isinstance(scored, dt.date):
+                gaps.append((scored - raised).days)
+        return _median(gaps), len(gaps)
+
+    def business_raised(self) -> Ratio:
+        """1c. Risks raised by the business, not by us, over all raised this quarter."""
+        raised = [nr for nr in self.graph.named_risks.values()
+                  if self._in_period(_as_date(nr.raw.get("raised_on")))]
+        biz = [nr for nr in raised if str(nr.raw.get("source", "")) == "business"]
+        return Ratio(len(biz), len(raised), note="new risks raised by the business")
+
+    # -- Element 2: Set the defense ----------------------------------------
+    def defended_top_risks(self) -> Ratio:
+        """2a-i. Over-appetite named risks with >=1 mapped control."""
+        over = self._over_appetite_risks()
+        defended = [nid for nid in over if self.graph.controls_of_named_risk.get(nid)]
+        undef = [nid for nid in over if not self.graph.controls_of_named_risk.get(nid)]
+        return Ratio(len(defended), len(over),
+                     note="top risks with a control behind them", detail=undef)
+
+    def defended_obligations(self) -> Ratio:
+        """2a-ii. External obligations with >=1 satisfying control present."""
+        reqs = self.graph.regulations
+        covered = [rid for rid, r in reqs.items()
+                   if any(c in self.graph.controls for c in r.satisfied_by_controls)]
+        uncovered = [rid for rid in reqs if rid not in covered]
+        return Ratio(len(covered), len(reqs),
+                     note="obligations with a control behind them", detail=uncovered)
+
+    def obligations_per_control(self) -> tuple[float, list[str]]:
+        """2b. Mean obligations satisfied per mapped control; controls serving
+        more than one framework called out."""
+        by_control: dict[str, set[str]] = {}
+        frameworks: dict[str, set[str]] = {}
+        for r in self.graph.regulations.values():
+            for c in r.satisfied_by_controls:
+                if c in self.graph.controls:
+                    by_control.setdefault(c, set()).add(r.id)
+                    frameworks.setdefault(c, set()).add(r.framework)
+        if not by_control:
+            return 0.0, []
+        mean = sum(len(v) for v in by_control.values()) / len(by_control)
+        multi = sorted(c for c, fw in frameworks.items() if len(fw) > 1)
+        return round(mean, 1), multi
+
+    def owned_in_business(self) -> Ratio:
+        """2c. Controls with a confirmed business owner, over all controls."""
+        confirmed = []
+        for cid, c in self.graph.controls.items():
+            owner = c.raw.get("business_owner")
+            conf = _as_date(c.raw.get("owner_confirmed_on"))
+            if owner and conf and (self.as_of - conf).days <= 366:
+                confirmed.append(cid)
+        return Ratio(len(confirmed), len(self.graph.controls),
+                     note="controls with a confirmed owner in the business")
+
+    # -- Element 3: Confirm it holds ---------------------------------------
+    def _fresh(self, cid: str) -> bool:
+        eids = self.graph.evidence_of_control.get(cid, [])
+        if not eids:
+            return False
+        return all(self.graph.evidence[e].status(self.as_of) == "fresh" for e in eids)
+
+    def current_proof(self) -> Ratio:
+        """3a. Controls behind over-appetite risks that have current proof."""
+        over = self._over_appetite_risks()
+        controls = sorted({c for nid in over for c in self.graph.controls_of_named_risk.get(nid, [])})
+        proven = [c for c in controls if self._fresh(c)]
+        unproven = [c for c in controls if not self._fresh(c)]
+        return Ratio(len(proven), len(controls),
+                     note="controls behind top risks with current proof", detail=unproven)
+
+    def proof_automated(self) -> Ratio:
+        """3b. Evidence collected automatically, over all evidence."""
+        auto = [e for e, ev in self.graph.evidence.items()
+                if ev.collection_method.lower() == "automated"]
+        return Ratio(len(auto), len(self.graph.evidence),
+                     note="proof that collects itself")
+
+    def problems_returned(self) -> Ratio:
+        """3c. Findings that came back (carry recurrence_of) over findings closed
+        this quarter."""
+        closed = [i for i in self.graph.issues
+                  if i.type == ISSUE_FINDING and self._in_period(_as_date(i.raw.get("closed_on")))]
+        recurred = [i for i in closed if i.raw.get("recurrence_of")]
+        return Ratio(len(recurred), len(closed),
+                     note="closed problems that had come back", detail=[i.id for i in recurred])
+
+    # -- Element 4: Act when it slips --------------------------------------
+    def past_promised(self) -> Ratio:
+        """4a. Open commitments past their promised date (overdue remediations +
+        expired exceptions) over all open commitments."""
+        open_rem = [r for r in self.graph.remediations if r.is_active]
+        overdue_rem = [r for r in open_rem if r.target_date and r.target_date < self.as_of]
+        open_exc = [i for i in self.graph.issues if i.type == "exception" and i.is_active]
+        expired_exc = [i for i in open_exc if i.expires_on and i.expires_on < self.as_of]
+        n_over = len(overdue_rem) + len(expired_exc)
+        n_all = len(open_rem) + len(open_exc)
+        return Ratio(n_over, n_all, note="open commitments past their promised date")
+
+    def days_to_decide(self) -> tuple[Optional[float], Optional[float], int]:
+        """4b. Median days to decide an exception; median days to decide a
+        deviation (both against their promised turnaround)."""
+        exc_gaps = []
+        for i in self.graph.issues:
+            if i.type != "exception":
+                continue
+            filed, decided = i.filed_on, _as_date(i.raw.get("decided_on"))
+            if isinstance(filed, dt.date) and isinstance(decided, dt.date):
+                exc_gaps.append((decided - filed).days)
+        dev_gaps = []
+        for d in self.graph.deviations:
+            filed, decided = d.filed_on, d.disposition_on
+            if isinstance(filed, dt.date) and isinstance(decided, dt.date):
+                dev_gaps.append((decided - filed).days)
+        return _median(exc_gaps), _median(dev_gaps), len(exc_gaps)
+
+    def can_kicking(self) -> list[tuple[str, str, int]]:
+        """4c. Items re-dated more than twice, with who is holding them."""
+        out = []
+        for i in self.graph.issues:
+            if i.type == "exception" and i.is_active and i.renewal_count > 2:
+                out.append((i.id, i.owner, i.renewal_count))
+        out.sort(key=lambda t: t[2], reverse=True)
+        return out
+
+    # -- Element 5: Prove it, inform decisions -----------------------------
+    def _requests_in_period(self) -> list[dict]:
+        return [r for r in self.graph.assurance_requests
+                if self._in_period(_as_date(r.get("received_on")))]
+
+    def answered_from_existing(self) -> Ratio:
+        """5a. Requests answered from material we already had."""
+        reqs = self._requests_in_period()
+        existing = [r for r in reqs if r.get("answered_from") == "existing"]
+        return Ratio(len(existing), len(reqs), note="requests answered from what we already had")
+
+    def turnaround(self) -> Optional[float]:
+        """5b. Median days to turn a request around (closed ones)."""
+        gaps = []
+        for r in self._requests_in_period():
+            rec, closed = _as_date(r.get("received_on")), _as_date(r.get("closed_on"))
+            if isinstance(rec, dt.date) and isinstance(closed, dt.date):
+                gaps.append((closed - rec).days)
+        return _median(gaps)
+
+    def consumers(self) -> tuple[list[str], Ratio]:
+        """5c. Teams outside GRC using our data, and how many came back."""
+        now = self.period.get("consumers", []) or []
+        prior = self.prior.get("consumers", []) or []
+        returned = [c for c in now if c in prior]
+        return now, Ratio(len(returned), len(prior), note="of last quarter's teams came back")
+
+    # -- Team health, OKRs, wins -------------------------------------------
+    def team_health(self) -> dict:
+        team = self.period.get("team", {}) or {}
+        roles = []
+        for r in team.get("open_roles", []) or []:
+            opened = _as_date(r.get("opened_on"))
+            age = (self.as_of - opened).days if isinstance(opened, dt.date) else None
+            roles.append((str(r.get("title", "")), age))
+        roles.sort(key=lambda t: (t[1] is not None, t[1]), reverse=True)
+        return {
+            "open_roles": roles,
+            "no_time_off": int(team.get("no_time_off_count", 0) or 0),
+            "dev_budget_pct": int(team.get("dev_budget_used_pct", 0) or 0),
+            "headcount": int(team.get("headcount", 0) or 0),
+        }
+
+    def okrs_by_theme(self) -> dict[str, list]:
+        out: dict[str, list] = {}
+        for okr in self.graph.grc_okrs:
+            out.setdefault(str(okr.get("theme", "other")), []).append(okr)
+        return out
+
+    def wins(self) -> list[dict]:
+        return list(self.period.get("wins", []) or [])
