@@ -1,32 +1,24 @@
-"""The GRC tab — landing scorecard and program-health shell (v4.0 Spec 1 §1.D–§1.F).
+"""The GRC QBR page — a quarterly business review for the head of GRC (v4.0).
 
-Reader: a **GRC Manager** (P.1). This page measures the health of the GRC
-program itself — coverage, hygiene, throughput, and the governance of AI — not
-the risk portfolio. The residual number is the eng tab's and does not lead here.
+Reader (§0.1): the head of GRC, presenting to the CISO, who is GRC-adjacent, not
+GRC-deep. Every label is legible without GRC vocabulary. The page answers three
+questions about the program (§0.2): is it doing its job, is it efficient, does it
+add value — as three columns over five program elements (the operating loop),
+giving a fifteen-metric grid. Below it: team health, the team's own OKRs, and
+three wins. Nothing else.
 
-Rendering decisions, per spec:
+Structure (§0.3, §2.6): grid, then team health, then OKRs, then wins. Team health
+sits below the program evidence on purpose — the same numbers read as a complaint
+above the evidence and as a justified ask below it.
 
-* **Two pages presented as tabs** (``docs/grc.html`` ↔ ``docs/dashboard.html``).
-  Both pages carry the same static two-tab bar (``dashboard._tab_bar``); the
-  current page's tab is the active one, the other tab links across, so switching
-  reads as switching tabs of one product. The isolation guarantee is *not* the
-  eng render being frozen byte-for-byte — it is that the GRC corpus (registers +
-  deviations) cannot change any eng number, enforced by
-  ``test_eng_dashboard_byte_identical_under_grc_loader`` (renders the eng page
-  with and without the GRC corpus loaded and asserts equality). The tab bar is
-  static chrome; it moved no number. True *in-page* tabbing (one HTML document
-  hosting both views) needs the eng render refactored into a fragment and is
-  still deferred; these remain two documents linked as tabs.
-* **Design system**: the ``:root`` tokens are imported from the eng dashboard
-  verbatim — no raw hex in components. RAG per P.9: conventional for
-  coverage/hygiene/SLA; two-sided for control right-sizing, where an
-  over-engineered control takes ``--status-below`` (amber) and the word
-  "over-controlled", never green. Every status marker carries its word.
-* **WCAG contrast** (§1.F): verified for the status trio against ``--bg`` and
-  ``--surface`` — status-over 7.11/6.04, status-at 8.38/7.12, status-below
-  7.94/6.75, status-below-tint 10.05/8.54; all clear the 4.5:1 AA normal-text
-  bar, so the trio is safe at the 10–12px table-label size this tab is dense
-  with. This closes the standing contrast item.
+Isolation (§0.5): this is a separate page from the engineering profile, which
+stays byte-identical. It reads registers the engineering build never opens.
+
+Design: shared :root tokens, no raw hex in components. RAG (§0.10) is conventional
+for coverage / currency / speed (green means healthy) and two-sided for control
+right-sizing (over-built reads amber, never green). Every status carries its word.
+WCAG contrast on the status trio verified against --bg/--surface (worst 6.04:1,
+above the 4.5:1 AA bar) at the 10–12px label sizes this page is dense with.
 """
 
 from __future__ import annotations
@@ -34,514 +26,315 @@ from __future__ import annotations
 from pathlib import Path
 
 from .config import Config
-from .dashboard import _ANALYTICS, _REPO_URL, _ROOT, _TABS_CSS, _esc, _tab_bar, money
-from .grc import GRCEngine, load_grc_graph
+from .dashboard import _ANALYTICS, _REPO_URL, _ROOT, _TABS_CSS, _esc, _tab_bar
+from .grc import QBREngine, load_grc_graph
 
-# Component CSS on top of the shared :root tokens (no raw hex here — §1.F).
 _CSS = _ROOT + """
 * { box-sizing:border-box; }
 body { margin:0; background:var(--bg); color:var(--text); border-top:3px solid var(--accent);
   font-family:var(--font-body); font-size:15px; line-height:1.5; -webkit-font-smoothing:antialiased; }
-h1,h2,h3,h4,.col-num,.strip-num,.strip-title { font-family:var(--font-display); font-weight:600; letter-spacing:-0.01em; }
+h1,h2,h3,h4,.fig { font-family:var(--font-display); font-weight:600; letter-spacing:-0.01em; }
 a { color:var(--accent); text-decoration:none; } a:hover { text-decoration:underline; }
 :focus-visible { outline:2px solid var(--accent); outline-offset:2px; }
-.wrap { max-width:var(--maxw); margin:0 auto; padding:40px 24px 80px; }
+.wrap { max-width:1120px; margin:0 auto; padding:40px 24px 80px; }
 header .eyebrow { color:var(--accent); font-size:10.5px; font-weight:600; letter-spacing:0.07em; text-transform:uppercase; }
 header h1 { font-size:30px; margin:6px 0 4px; color:var(--text-strong); }
 header .meta { color:var(--text-muted); font-size:13.5px; }
-.cols { display:grid; grid-template-columns:repeat(4,1fr); gap:12px; margin:26px 0 0; }
-.col { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:16px 18px; }
-.col h3 { font-size:13px; margin:0 0 10px; color:var(--text-strong); text-transform:uppercase; letter-spacing:0.05em; }
-.col-num { font-size:26px; color:var(--text-strong); line-height:1.15; }
-.col-den { color:var(--text-muted); font-size:11.5px; margin-top:2px; }
-.col-row { border-top:1px solid var(--border); margin-top:10px; padding-top:10px; font-size:12.5px; }
-.col-k { color:var(--text-muted); font-size:10.5px; text-transform:uppercase; letter-spacing:0.06em; }
-.col-v { margin-top:2px; }
-.slahead { display:flex; gap:12px; align-items:baseline; flex-wrap:wrap; margin:2px 0 14px; }
-.slahead .col-num { font-size:26px; }
-.slahead .lbl { color:var(--text); font-size:14px; }
-.note { margin:14px 0 0; color:var(--text-muted); font-size:12.5px; max-width:820px; }
-.grid { display:grid; gap:20px; margin-top:26px; }
-.card { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:24px 26px; }
-.card h2 { font-size:17px; margin:0 0 4px; color:var(--text-strong); }
-.card .sub { color:var(--text-muted); font-size:13px; margin:0 0 14px; }
-.card h4 { font-size:13.5px; margin:16px 0 8px; color:var(--text-strong); }
-table.tbl { width:100%; border-collapse:collapse; font-size:13px; }
-.tbl th { text-align:left; color:var(--text-muted); font-weight:500; font-size:11px; text-transform:uppercase;
-  letter-spacing:0.04em; padding:6px 10px; border-bottom:1px solid var(--border); }
-.tbl td { padding:8px 10px; border-bottom:1px solid var(--border); vertical-align:top; }
-.tbl tr:last-child td { border-bottom:none; }
-.tbl .nm { color:var(--text-strong); }
-.tbl .drv { color:var(--text-muted); }
-.tbl .num { text-align:right; font-family:var(--font-display); white-space:nowrap; }
-.st { font-weight:600; font-size:12px; }
-.wip-tag { font-size:28px; vertical-align:middle; letter-spacing:0.04em; }
-.st-over { color:var(--status-over); }
-.st-at { color:var(--status-at); }
-.st-below { color:var(--status-below-tint); }
-.dot { display:inline-block; width:8px; height:8px; border-radius:50%; margin-right:5px; vertical-align:baseline; }
-.lede { color:var(--text); font-size:13.5px; margin:0 0 14px; max-width:820px; }
-footer { margin-top:40px; color:var(--text-faint); font-size:12.5px; max-width:820px; }
-@media (max-width:840px) { .cols { grid-template-columns:repeat(2,1fr); } }
+.wip-tag { font-size:28px; vertical-align:middle; letter-spacing:0.04em; color:var(--status-below-tint); font-weight:600; }
+.lede { color:var(--text); font-size:13.5px; margin:16px 0 0; max-width:900px; }
+/* grid */
+.grid { width:100%; border-collapse:separate; border-spacing:10px; margin:22px 0 0; table-layout:fixed; }
+.grid th { text-align:left; color:var(--text-muted); font-size:11px; font-weight:500; text-transform:uppercase;
+  letter-spacing:0.05em; padding:0 6px 2px; vertical-align:bottom; }
+.grid th.qcol { color:var(--text); font-size:12.5px; }
+.grid td { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius);
+  padding:14px 16px; vertical-align:top; }
+.elname { background:none !important; border:none !important; padding:14px 6px !important; }
+.elname .en { font-family:var(--font-display); font-weight:600; font-size:15px; color:var(--text-strong); }
+.elname .eq { display:block; color:var(--text-muted); font-size:11.5px; margin-top:3px; line-height:1.4; }
+.cell .fig { font-size:22px; color:var(--text-strong); line-height:1.1; }
+.cell .cap { color:var(--text-muted); font-size:11.5px; margin-top:8px; line-height:1.45; }
+.cell .two { font-size:15px; color:var(--text-strong); font-family:var(--font-display); font-weight:600; }
+.st { display:inline-flex; align-items:baseline; gap:5px; font-size:11.5px; font-weight:600; margin-top:8px; }
+.st .dot { width:8px; height:8px; border-radius:50%; display:inline-block; }
+.st-at { color:var(--status-at); } .st-below { color:var(--status-below-tint); } .st-over { color:var(--status-over); }
+/* blocks below the grid */
+.block { margin:30px 0 0; }
+.block h2 { font-size:16px; color:var(--text-strong); margin:0 0 4px; }
+.block .why { color:var(--text-muted); font-size:12.5px; margin:0 0 14px; max-width:900px; }
+.tri { display:grid; grid-template-columns:repeat(3,1fr); gap:12px; }
+.card { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:16px 18px; }
+.card .fig { font-size:22px; color:var(--text-strong); }
+.card .k { color:var(--text-muted); font-size:10.5px; text-transform:uppercase; letter-spacing:0.06em; }
+.card .cap { color:var(--text-muted); font-size:12px; margin-top:6px; }
+.okrline { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:14px 18px;
+  display:flex; gap:22px; flex-wrap:wrap; align-items:baseline; }
+.okrline .obj { font-family:var(--font-display); font-weight:600; font-size:13.5px; color:var(--text-strong); }
+.okrline .kr { font-size:12.5px; color:var(--text-muted); }
+.okrline .kr b { color:var(--text); font-family:var(--font-display); }
+.wins { display:grid; grid-template-columns:repeat(3,1fr); gap:12px; }
+.win { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:16px 18px; }
+.win .team { color:var(--accent); font-size:11px; font-weight:600; text-transform:uppercase; letter-spacing:0.05em; }
+.win .txt { color:var(--text); font-size:13px; margin-top:7px; line-height:1.5; }
+.absent { margin:26px 0 0; color:var(--text-muted); font-size:12px; line-height:1.6; max-width:900px; }
+.absent b { color:var(--text); }
+footer { margin-top:34px; color:var(--text-faint); font-size:12px; max-width:900px; line-height:1.6; }
+.trace { color:var(--text-faint); font-size:10.5px; margin-top:10px; }
+@media (max-width:900px){ .grid,.tri,.wins{display:block;} .grid td,.tri>*,.wins>*{margin-bottom:10px;} }
 """
 
-def _word_over(text: str) -> str:
-    return f'<span class="st st-over"><span class="dot" style="background:var(--status-over)"></span>{_esc(text)}</span>'
+# Status level -> (css class, dot token). Conventional RAG (§0.10): green healthy,
+# amber attention, red urgent. Two-sided for control right-sizing reuses amber.
+_LEVELS = {
+    "good": ("st-at", "var(--status-at)"),
+    "watch": ("st-below", "var(--status-below)"),
+    "bad": ("st-over", "var(--status-over)"),
+}
 
 
-def _word_at(text: str) -> str:
-    return f'<span class="st st-at"><span class="dot" style="background:var(--status-at)"></span>{_esc(text)}</span>'
+def _status(level: str, word: str) -> str:
+    cls, dot = _LEVELS[level]
+    return (f'<span class="st {cls}"><span class="dot" style="background:{dot}"></span>'
+            f'{_esc(word)}</span>')
 
 
-def _word_below(text: str) -> str:
-    return f'<span class="st st-below"><span class="dot" style="background:var(--status-below)"></span>{_esc(text)}</span>'
+def _cell(fig: str, level: str, word: str, cap: str) -> str:
+    return (f'<td class="cell"><div class="fig">{fig}</div>{_status(level, word)}'
+            f'<div class="cap">{cap}</div></td>')
 
 
-def _sla_word(met: int, measured: int) -> str:
-    """A conventional-RAG SLA word (P.9): all met -> green; most met -> amber
-    (word 'slipping'); under three-quarters -> red (word 'behind')."""
-    if measured and met == measured:
-        return _word_at("on SLA")
-    if measured and met / measured >= 0.75:
-        return _word_below("slipping")
-    return _word_over("behind")
-
-
-def _fmt_date(d) -> str:
-    return d.isoformat() if d else "—"
-
-
-# ---------------------------------------------------------------------------
-# Landing scorecard (§1.E): four columns, small multiples, no composite.
-# ---------------------------------------------------------------------------
-
-
-def _scorecard(e: GRCEngine) -> str:
-    pc = e.policy_currency()
-    ac = e.agent_coverage()
-    rc = e.requirement_coverage()
-    rh = e.risk_hygiene()
-    unscored = e.unscored_risks()
-    rem = e.remediation_sla()
-    ev = e.evidence_freshness()
-    no_policy, no_risk = e.unmapped_controls()
-    plans = e.findings_without_plan()
-    sources = e.finding_sources()
-    dev_sla = e.deviation_sla()
-    dev_overdue = [s for s in dev_sla if s.met is False and s.dev.is_open]
-    n_ev = len(e.graph.evidence)
-    n_findings = sum(sources.values())
-    scored = len(e.graph.named_risks) - len(unscored)
-
-    worst_pol = pc.overdue[0] if pc.overdue else None
-    worst_rem = rem.overdue[0] if rem.overdue else None
-    stale_ev = ev["stale"] + ev["missing"]
-
-    gov = (
-        '<div class="col"><h3>Governance</h3>'
-        f'<div class="col-num">{len(rc.satisfied)}/{rc.total}</div>'
-        '<div class="col-den">external requirements satisfied by a live control (regulations.yaml)</div>'
-        '<div class="col-row"><div class="col-k">Worst-aging hygiene</div><div class="col-v">'
-        + (f'{_esc(worst_pol.policy_id)} flagged for manual review · <b>{worst_pol.days_overdue}d overdue</b>'
-           if worst_pol else "no policies flagged for review")
-        + '</div></div>'
-        f'<div class="col-row"><div class="col-k">SLA</div><div class="col-v">{_sla_word(pc.current, pc.total)}'
-        f' <span class="drv">policies flagged for manual review: {len(pc.overdue)}/{pc.total}</span></div></div>'
-        # AI governance rides in the Governance column (§1.E).
-        '<div class="col-row"><div class="col-k">AI governance</div>'
-        f'<div class="col-v">guardrail coverage <b>{len(ac.covered)}/{len(ac.detected)}</b> detected agents'
-        f' · disposition SLA: <b>{len(dev_overdue)}</b> overdue</div></div>'
-        '</div>')
-
-    risk = (
-        '<div class="col"><h3>Risk</h3>'
-        f'<div class="col-num">{scored}/{len(e.graph.named_risks)}</div>'
-        '<div class="col-den">named risks scored by a scenario (named_risks.yaml)</div>'
-        '<div class="col-row"><div class="col-k">Worst-aging hygiene</div><div class="col-v">'
-        + (f'{_esc(worst_rem.id)} target <b>{(e.config.as_of - worst_rem.target_date).days}d past</b>' if worst_rem else "no overdue remediations")
-        + '</div></div>'
-        f'<div class="col-row"><div class="col-k">SLA</div><div class="col-v">'
-        f'{_sla_word(rem.total_live - len(rem.overdue), rem.total_live)}'
-        f' <span class="drv">remediations on target: {rem.total_live - len(rem.overdue)}/{rem.total_live}</span></div></div>'
-        f'<div class="col-row"><div class="col-k">Hygiene pass</div><div class="col-v">{len(rh.passing)}/{rh.total} risks flag-free'
-        f' · {len(unscored)} unscored</div></div>'
-        '</div>')
-
-    comp = (
-        '<div class="col"><h3>Compliance</h3>'
-        f'<div class="col-num">{len(e.graph.controls) - len(no_policy)}/{len(e.graph.controls)}</div>'
-        '<div class="col-den">controls tracing to a policy — separately, '
-        f'{len(e.graph.controls) - len(no_risk)}/{len(e.graph.controls)} map to a named risk</div>'
-        '<div class="col-row"><div class="col-k">Worst-aging hygiene</div><div class="col-v">'
-        f'<b>{len(stale_ev)}</b> of {n_ev} evidence records stale or missing</div></div>'
-        f'<div class="col-row"><div class="col-k">SLA</div><div class="col-v">{_sla_word(len(ev["fresh"]), n_ev)}'
-        f' <span class="drv">evidence fresh on cadence: {len(ev["fresh"])}/{n_ev}</span></div></div>'
-        f'<div class="col-row"><div class="col-k">Action plans</div><div class="col-v">{len(plans)} finding(s) with no plan</div></div>'
-        '</div>')
-
-    self_n = sources.get("self-identified", 0)
-    dev_measured = [s for s in dev_sla if s.met is not None]
-    ai = (
-        '<div class="col"><h3>AI &amp; Op Excellence</h3>'
-        f'<div class="col-num">{self_n}/{n_findings}</div>'
-        f'<div class="col-den">findings self-identified (of {n_findings} — small n)</div>'
-        '<div class="col-row"><div class="col-k">Worst-aging hygiene</div><div class="col-v">'
-        f'<b>{len(e.manual_evidence())}</b> of {n_ev} evidence records still collected manually</div></div>'
-        '<div class="col-row"><div class="col-k">SLA</div><div class="col-v">'
-        f'{_sla_word(sum(1 for s in dev_measured if s.met), len(dev_measured))}'
-        f' <span class="drv">deviations dispositioned in SLA: '
-        f'{sum(1 for s in dev_measured if s.met)}/{len(dev_measured)} measured</span></div></div>'
-        '<div class="col-row"><div class="col-k">Automation</div><div class="col-v">roadmap: 7 seams, 0 live '
-        '(data + documented seam)</div></div>'
-        '</div>')
-
-    return f'<div class="cols">{gov}{risk}{comp}{ai}</div>'
-
-
-def _program_sla_strip(e: GRCEngine) -> str:
-    steps = e.program_sla()
-    met = sum(m for m, _ in steps.values())
-    measured = sum(n for _, n in steps.values())
-    rows = "".join(
-        f'<tr><td class="nm">{_esc(name)}</td>'
-        f'<td class="num">{m}/{n}</td>'
-        f'<td>{_sla_word(m, n)}</td></tr>'
-        for name, (m, n) in steps.items())
-    return (
-        '<div class="card">'
-        '<h2>Program-wide SLA adherence</h2>'
-        '<p class="sub">Across every process step with an authored service level (sla_config.yaml), '
-        'how many items are on time right now.</p>'
-        f'<div class="slahead"><span class="col-num">{met}/{measured}</span>'
-        f'<span class="lbl">items on SLA</span>{_sla_word(met, measured)}</div>'
-        '<table class="tbl"><thead><tr><th>Process step</th><th>On SLA</th><th>Status</th></tr></thead>'
-        f'<tbody>{rows}</tbody></table>'
-        '<p class="note">Deliberately <b>no blended health score</b> — a composite would describe '
-        'nothing. The headline is simply the sum of the rows above, each keeping its own denominator: '
-        'a count of items on time, not a quality index.</p>'
-        '</div>')
+def _pct(n: int, d: int) -> str:
+    return f"{round(n / d * 100)}%" if d else "—"
 
 
 # ---------------------------------------------------------------------------
-# Pillar summary cards — the §1.B derivations made visible (drill-down views
-# are later specs; this is the landing's supporting detail).
+# The grid (§2.1): five elements x three questions.
 # ---------------------------------------------------------------------------
 
 
-def _governance_card(e: GRCEngine) -> str:
-    pc = e.policy_currency()
-    rc = e.requirement_coverage()
-    ac = e.agent_coverage()
-    rows = "".join(
-        f'<tr><td class="nm">{_esc(o.policy_id)}</td>'
-        f'<td class="drv">{_esc(o.title)}</td><td>{_fmt_date(o.last_reviewed)}</td>'
-        f'<td>{_esc(o.cadence)}</td><td class="num">{_word_over(f"{o.days_overdue}d overdue")}</td></tr>'
-        for o in pc.overdue)
-    consistency = ("both directions agree" if not rc.mismatched_framework_refs else
-                   f"{len(rc.mismatched_framework_refs)} mismatch(es)")
-    uncovered = ", ".join(_esc(a) for a in ac.uncovered) or "none"
-    return (
-        '<div class="card"><h2>Governance</h2>'
-        '<p class="sub">Are commitments current, and does every obligation land on a live control?</p>'
-        f'<p class="lede">Policy currency: <b>{pc.current}/{pc.total}</b> policies inside their review '
-        f'cadence; <b>{len(pc.overdue)} flagged for manual review</b>:</p>'
-        '<table class="tbl"><thead><tr><th>Policy</th><th>Title</th><th>Last reviewed</th>'
-        f'<th>Cadence</th><th>Status</th></tr></thead><tbody>{rows}</tbody></table>'
-        f'<h4>Control-to-requirement coverage</h4>'
-        f'<p class="lede"><b>{len(rc.satisfied)}/{rc.total}</b> external requirements (all of '
-        'regulations.yaml: five DORA pillars, three PCI-DSS) satisfied by an existing control. '
-        f'<code>framework_refs</code> cross-check: {consistency}.</p>'
-        f'<h4>Guardrail coverage of detected agents</h4>'
-        f'<p class="lede"><b>{len(ac.covered)}/{len(ac.detected)}</b> covered (denominator: the '
-        'security-fed set in agent_inventory.yaml — the guardrails\' own applies_to would always read '
-        f'covered). Ungoverned: {_word_over("uncovered")} {uncovered}.</p>'
-        '</div>')
+def _grid(e: QBREngine) -> str:
+    ec = e.estate_coverage()
+    ttu, ttu_n = e.time_to_understand()
+    br = e.business_raised()
+    dtr = e.defended_top_risks()
+    dob = e.defended_obligations()
+    opc, multi = e.obligations_per_control()
+    own = e.owned_in_business()
+    cp = e.current_proof()
+    pa = e.proof_automated()
+    ret = e.problems_returned()
+    pp = e.past_promised()
+    exc_d, dev_d, _ = e.days_to_decide()
+    ck = e.can_kicking()
+    afe = e.answered_from_existing()
+    tat = e.turnaround()
+    cons_now, cons_ret = e.consumers()
 
+    intake_target = e.graph.sla.raw.get("risk_intake_to_scored_days", 10)
+    decide_target = e.graph.sla.exception_raised_to_decided_days
 
-def _ai_governance_card(e: GRCEngine) -> str:
-    by = e.deviations_by()
-    sla = e.deviation_sla()
-    pe = e.provisional_exposure()
-    complete, incomplete = e.ladder_completeness()
-    ac = e.agent_coverage()
+    # owner concentration for 4c
+    holders: dict[str, int] = {}
+    for _id, owner, _c in ck:
+        holders[owner] = holders.get(owner, 0) + 1
+    top_holder = max(holders.items(), key=lambda kv: kv[1]) if holders else None
 
-    disp = " · ".join(f"{k} <b>{v}</b>" for k, v in by["disposition"].items())
-    sev = " · ".join(f"{k} <b>{v}</b>" for k, v in by["severity"].items())
-    sla_rows = "".join(
-        f'<tr><td class="nm">{_esc(s.dev.id)}</td><td class="drv">{_esc(s.dev.guardrail)}</td>'
-        f'<td>{_esc(s.dev.severity)}</td><td>{_esc(s.dev.disposition)}</td>'
-        f'<td>{_fmt_date(s.due)}</td><td class="num">'
-        + (_word_at("in SLA") if s.met else
-           (_word_over(f"{s.days_overdue}d overdue") if s.met is False else _word_below("open, in window")))
-        + '</td></tr>'
-        for s in sla)
-    # Roll the per-deviation contributions up per named risk — the landing
-    # altitude. Count the open deviations on each, the combined provisional
-    # exposure, and what share of that risk's appetite it represents.
-    prov_rows = ""
-    for nid, band in pe.by_risk.items():
-        nr = e.graph.named_risks.get(nid)
-        app = nr.appetite_threshold if nr else None
-        n_dev = sum(1 for c in pe.contributions if c.named_risk == nid)
-        share = f"{band.mean / app:.0%} of appetite" if app else "—"
-        prov_rows += (
-            f'<tr><td class="nm">{_esc(nid)}</td>'
-            f'<td class="num">{n_dev}</td>'
-            f'<td class="num">+{money(band.low)}–{money(band.high)}</td>'
-            f'<td class="num">{_esc(share)}</td></tr>')
-    ladders = (f'<b>{len(complete)}/{len(e.graph.guardrails)}</b> guardrails define a response for '
-               'every severity level (low, medium, high, critical).')
-    if incomplete:
-        ladders += " " + " ".join(
-            f'{_esc(g)} is {_word_below("incomplete")} — no response set for '
-            f'{_esc(", ".join(rungs))}.'
-            for g, rungs in incomplete.items())
+    rows = [
+        # (element name, plain question under it, [cell, cell, cell])
+        ("See the risk", "Do we know what we're carrying?", [
+            (f"{ec.n}/{ec.d}",
+             "good" if ec.pct >= 90 else "watch",
+             ("all units covered" if not ec.detail else f"{', '.join(ec.detail)} uncovered"),
+             "business units with an owned, scored risk"),
+            (f"{ttu:g} days" if ttu is not None else "—",
+             "good" if (ttu is not None and ttu <= intake_target) else "watch",
+             (f"target {intake_target}" if ttu is not None else "no new risks"),
+             f"to go from raised to scored, this quarter (n={ttu_n})"),
+            (_pct(br.n, br.d),
+             "good" if (br.pct or 0) >= 50 else "watch",
+             f"{br.n} of {br.d} this quarter",
+             "of new risks were raised by the business, not by us"),
+        ]),
+        ("Set the defense", "Is something standing behind the important risks?", [
+            (f'<span class="two">{dtr.n}/{dtr.d} top risks</span><br>'
+             f'<span class="two">{dob.n}/{dob.d} obligations</span>',
+             "good" if (not dtr.detail and not dob.detail) else "watch",
+             ("both fully covered" if (not dtr.detail and not dob.detail) else "gaps remain"),
+             "top risks, and outside obligations, with a control behind them"),
+            (f"{opc:g}",
+             "good",
+             (f"{len(multi)} pull double duty" if multi else "one-to-one"),
+             "obligations covered per control on average"),
+            (_pct(own.n, own.d),
+             "good" if (own.pct or 0) >= 80 else "watch",
+             f"{own.n} of {own.d} controls",
+             "have a confirmed owner sitting in the business"),
+        ]),
+        ("Confirm it holds", "Do we have proof it's actually working?", [
+            (_pct(cp.n, cp.d),
+             "good" if (cp.pct or 0) >= 90 else ("watch" if (cp.pct or 0) >= 50 else "bad"),
+             f"{cp.n} of {cp.d} top-risk controls",
+             "have current proof they are working"),
+            (_pct(pa.n, pa.d),
+             "good" if (pa.pct or 0) >= 80 else "watch",
+             f"{pa.n} of {pa.d} automated",
+             "of that proof collects itself, no person in the loop"),
+            (f"{ret.n} of {ret.d}",
+             "good" if ret.n == 0 else "watch",
+             ("none came back" if ret.n == 0 else "one came back"),
+             "problems closed this quarter that had returned before"),
+        ]),
+        ("Act when it slips", "When something slips, do we move?", [
+            (_pct(pp.n, pp.d),
+             "good" if (pp.pct or 0) <= 15 else ("watch" if (pp.pct or 0) <= 35 else "bad"),
+             f"{pp.n} of {pp.d} open items",
+             "are past the date they were promised by"),
+            (f"{exc_d:g} days" if exc_d is not None else "—",
+             "good" if (exc_d is not None and exc_d <= decide_target) else "watch",
+             (f"under a day on agent events" if (dev_d is not None and dev_d < 1) else "on agent events too"),
+             f"to decide an exception (target {decide_target})"),
+            (str(len(ck)),
+             "good" if len(ck) == 0 else "watch",
+             (f"{top_holder[0].split('@')[0]} holds {top_holder[1]}" if top_holder else "none"),
+             "items re-dated more than twice, and who is holding them"),
+        ]),
+        ("Prove it, inform decisions", "Can we show it, and does anyone use it?", [
+            (_pct(afe.n, afe.d),
+             "good" if (afe.pct or 0) >= 60 else "watch",
+             f"{afe.n} of {afe.d} requests",
+             "answered from material we already had"),
+            (f"{tat:g} day" + ("s" if (tat or 0) != 1 else "") if tat is not None else "—",
+             "good" if (tat is not None and tat <= 5) else "watch",
+             "median this quarter",
+             "to turn a customer or auditor request around"),
+            (str(len(cons_now)),
+             "good" if cons_ret.n >= cons_ret.d and cons_ret.d > 0 else "watch",
+             (f"{cons_ret.n} of {cons_ret.d} prior returned" if cons_ret.d else "first quarter"),
+             "teams outside GRC used our data this quarter"),
+        ]),
+    ]
 
-    return (
-        '<div class="card"><h2>AI governance</h2>'
-        '<p class="sub">Governing guardrails is a governance act, so this lives under Governance. '
-        'Anchors: NIST AI RMF (Govern, Map, Measure, Manage; NIST AI 100-1, Jan 2023). Autonomy tiers '
-        'and the Agentic Profile are <b>Cloud Security Alliance</b> extensions — v1, evolving, '
-        'not NIST-published. Runtime enforcement defers to CSA\'s AAGATE overlay — an external '
-        'executor, not built here.</p>'
-        f'<p class="lede">Guardrail coverage: <b>{len(ac.covered)}/{len(ac.detected)}</b> detected '
-        f'agents governed. Deviations — by disposition: {disp}; by severity: {sev}.</p>'
-        '<h4>How fast flagged deviations get reviewed</h4>'
-        '<p class="lede">Agents act on their own; guardrails run inline, so nothing here sits in front '
-        'of an agent waiting for sign-off. A deviation is the exception — a guardrail breach caught '
-        'after the fact — that a human then reviews and closes out. This is how fast that '
-        'after-the-fact review happens, against each guardrail\'s time limit. All '
-        f'{len(sla)} deviations:</p>'
-        '<table class="tbl"><thead><tr><th>Deviation</th><th>Guardrail</th><th>Severity</th>'
-        f'<th>Disposition</th><th>Due</th><th>Status</th></tr></thead><tbody>{sla_rows}</tbody></table>'
-        '<h4>How much risk the open deviations carry</h4>'
-        '<p class="lede">The other side of the same deviations: not how fast they clear, but how much '
-        'potential risk they add while still open. Each unresolved deviation (proposed or accepted — '
-        'dismissed and remediated add nothing) adds a small, capped amount to the risk it maps to, so '
-        'a risk can accumulate exposure from several. The cap is the guardrail\'s own declared limit. '
-        'For the purposes of this simulation this stays out of the eng portfolio total and is not '
-        'treated as the risk\'s real exposure.</p>'
-        '<table class="tbl"><thead><tr><th>Named risk</th><th>Open deviations</th>'
-        f'<th>Provisional exposure</th><th>Share of appetite</th></tr></thead><tbody>{prov_rows}</tbody></table>'
-        f'<h4>Response coverage by severity</h4><p class="lede">{ladders}</p>'
-        '</div>')
-
-
-def _risk_card(e: GRCEngine) -> str:
-    rh = e.risk_hygiene()
-    unscored = e.unscored_risks()
-    rem = e.remediation_sla()
-    flagged = "".join(
-        f'<tr><td class="nm">{_esc(nid)}</td><td class="drv">{", ".join(_esc(c) for c in codes)}</td>'
-        f'<td>{_word_below("flagged")}</td></tr>'
-        for nid, codes in sorted(rh.flagged.items()))
-    kick_rows = "".join(
-        f'<tr><td class="nm">{_esc(i.id)}</td><td class="num">&times;{i.renewal_count}</td>'
-        f'<td class="drv">{"justification refreshed" if i.justification_changed_last else "justification never revisited"}</td>'
-        f'<td>{_word_over("temporary forever") if not i.justification_changed_last else _word_below("renewed")}</td></tr>'
-        for i in rem.kicked)
-    worst = rem.overdue[:5]
-    over_rows = "".join(
-        f'<tr><td class="nm">{_esc(r.id)}</td><td class="drv">{_esc(r.title[:52])}</td>'
-        f'<td>{_fmt_date(r.target_date)}</td>'
-        f'<td class="num">{_word_over(f"{(e.config.as_of - r.target_date).days}d past target")}</td></tr>'
-        for r in worst)
-    return (
-        '<div class="card"><h2>Risk</h2>'
-        '<p class="sub">Is the register clean, complete, and moving at its promised speed?</p>'
-        f'<p class="lede">Hygiene pass: <b>{len(rh.passing)}/{rh.total}</b> named risks carry no '
-        'validation flags (the validate_graph flag surface — stale/uncalibrated estimator, no-op '
-        'effect, threshold rules — attributed to the risk carrying the flagged record). Diagnostic '
-        'only; none of this moves residual.</p>'
-        '<table class="tbl"><thead><tr><th>Named risk</th><th>Flags</th><th>Status</th></tr></thead>'
-        f'<tbody>{flagged}</tbody></table>'
-        f'<h4>Unscored</h4><p class="lede"><b>{len(unscored)}</b> of {rh.total} named risks have zero '
-        'scenarios: '
-        + ", ".join(f'{_esc(n)} {_word_below("unscored")}' for n in unscored)
-        + '. Appetite authored, exposure unknown.</p>'
-        f'<h4>Remediation SLA</h4>'
-        f'<p class="lede"><b>{rem.total_live - len(rem.overdue)}/{rem.total_live}</b> live remediations '
-        'are inside their target date; worst five:</p>'
-        '<table class="tbl"><thead><tr><th>Remediation</th><th>Title</th><th>Target</th><th>Status</th>'
-        f'</tr></thead><tbody>{over_rows}</tbody></table>'
-        f'<h4>Can-kicking</h4><p class="lede"><b>{len(rem.kicked)}</b> active exceptions renewed '
-        f'{e.config.renewal_alert_count}+ times ({len(rem.kicked_unrefreshed)} never revisited). The '
-        'exposure-ranked deferral view stays on the eng tab.</p>'
-        '<table class="tbl"><thead><tr><th>Exception</th><th>Renewals</th><th>Justification</th>'
-        f'<th>Status</th></tr></thead><tbody>{kick_rows}</tbody></table>'
-        '</div>')
-
-
-def _compliance_card(e: GRCEngine) -> str:
-    no_policy, no_risk = e.unmapped_controls()
-    plans = e.findings_without_plan()
-    ev = e.evidence_freshness()
-    manual = e.manual_evidence()
-    reuse = e.cross_framework_reuse()
-    over_eng = e.over_engineered_controls()
-    n_controls = len(e.graph.controls)
-    n_ev = len(e.graph.evidence)
-    plan_rows = "".join(
-        f'<tr><td class="nm">{_esc(i.id)}</td><td class="drv">{_esc(i.title[:64])}</td>'
-        f'<td>{_esc(i.severity)}</td><td>{_word_over("no action plan")}</td></tr>'
-        for i in plans)
-    reuse_rows = "".join(
-        f'<tr><td class="nm">{_esc(cid)} {_esc(e.graph.controls[cid].title[:40])}</td>'
-        f'<td class="drv">{", ".join(_esc(r) for r in rids)}</td>'
-        f'<td>{_word_at("reused")}</td></tr>'
-        for cid, rids in reuse.items())
-    over_rows = "".join(
-        f'<tr><td class="nm">{_esc(cid)} {_esc(e.graph.controls[cid].title[:40])}</td>'
-        f'<td class="drv">{", ".join(_esc(n) for n in nids)}</td>'
-        f'<td>{_word_below("review")}</td></tr>'
-        for cid, nids in over_eng[:8])
-    return (
-        '<div class="card"><h2>Compliance</h2>'
-        '<p class="sub">Is every control mapped, proven, and right-sized?</p>'
-        '<p class="lede"><b>Unmapped controls — two denominators, never one number:</b> '
-        f'<b>{len(no_policy)}/{n_controls}</b> trace to no governing <i>policy</i>; '
-        f'<b>{len(no_risk)}/{n_controls}</b> map to no <i>named risk</i> (expected for an illustration '
-        'exercising part of the framework).</p>'
-        f'<h4>Findings without an action plan</h4>'
-        f'<p class="lede"><b>{len(plans)}</b> of {sum(e.finding_sources().values())} findings have no '
-        'remediation pointing at them:</p>'
-        '<table class="tbl"><thead><tr><th>Finding</th><th>Title</th><th>Severity</th><th>Status</th>'
-        f'</tr></thead><tbody>{plan_rows}</tbody></table>'
-        f'<h4>Evidence</h4><p class="lede">Freshness derived at build time (all {n_ev} records): '
-        f'{_word_at("fresh")} <b>{len(ev["fresh"])}</b> · '
-        f'{_word_below("stale")} <b>{len(ev["stale"])}</b> ({", ".join(_esc(x) for x in ev["stale"])}) · '
-        f'{_word_over("missing")} <b>{len(ev["missing"])}</b> ({", ".join(_esc(x) for x in ev["missing"])}). '
-        'Stale or missing evidence is a <b>collection gap to automate</b>, not a human chore: '
-        f'<b>{len(manual)}/{n_ev}</b> records still collected manually '
-        f'({", ".join(_esc(x) for x in manual)}) — the gap roadmap item 1 closes.</p>'
-        '<h4>Cross-framework reuse (a positive finding)</h4>'
-        '<p class="lede">Controls satisfying more than one requirement — map once, satisfy many:</p>'
-        '<table class="tbl"><thead><tr><th>Control</th><th>Requirements</th><th>Status</th></tr></thead>'
-        f'<tbody>{reuse_rows}</tbody></table>'
-        '<h4>Controls to review for over-investment</h4>'
-        f'<p class="lede"><b>{len(over_eng)}</b> controls map only to risks below appetite — '
-        f'review to determine if over-invested. First eight of {len(over_eng)}:</p>'
-        '<table class="tbl"><thead><tr><th>Control</th><th>Mapped risks (all below appetite)</th>'
-        f'<th>Status</th></tr></thead><tbody>{over_rows}</tbody></table>'
-        '</div>')
-
-
-# The seven next-steps.md items as an initiative portfolio (§1.B AI & OpEx):
-# (title, the metric on this tab it would move). Honest: every stage is
-# "data + documented seam", nothing runs live (P.10).
-_ROADMAP = [
-    ("Automated evidence collection", "evidence freshness; manual-collection count"),
-    ("Policy-as-code", "control-to-requirement coverage"),
-    ("Live incident / issue auto-mapping", "self-identified share of findings"),
-    ("Dynamic intake and triage workflow", "risk intake→scored SLA (authored 10d, unmeasured)"),
-    ("Second-order remediation composition & evidence-informed uncertainty", "remediation SLA view"),
-    ("KRI live ingestion, alerting, trend monitoring", "agent-telemetry KRIs (seeded as data)"),
-    ("Deduplication checks (tier-aware)", "issues-floor hygiene (merge dupes, keep instances)"),
-]
-
-# The build-time hygiene checks behind "% hygiene automated" (§1.B): each row is
-# (check, automated?). Deterministic = dates, SLAs, coverage counts — no model.
-# The manual rows are the human/ratification steps the same metrics depend on.
-_HYGIENE_CHECKS = [
-    ("policy review-currency flagging (dates vs cadence)", True),
-    ("named-risk review-currency flagging", True),
-    ("evidence freshness (cadence + last_collected)", True),
-    ("remediation target-date adherence", True),
-    ("deviation disposition SLA", True),
-    ("requirement→control existence + two-direction consistency", True),
-    ("guardrail coverage of detected agents", True),
-    ("estimator calibration staleness (validate_graph)", True),
-    ("control↔requirement mapping ratification", False),
-    ("deviation disposition decision", False),
-    ("appetite & policy review sign-off", False),
-    ("manual evidence collection (5 records)", False),
-]
-
-
-def _opex_card(e: GRCEngine) -> str:
-    sources = e.finding_sources()
-    n = sum(sources.values())
-    auto = [c for c, a in _HYGIENE_CHECKS if a]
-    src = " · ".join(f"{_esc(k)} <b>{v}</b>" for k, v in sorted(sources.items()))
-    road_rows = "".join(
-        f'<tr><td class="nm">{i}. {_esc(title)}</td>'
-        f'<td>{_word_below("data + seam, not built")}</td>'
-        f'<td class="drv">{_esc(metric)}</td></tr>'
-        for i, (title, metric) in enumerate(_ROADMAP, start=1))
-    check_rows = "".join(
-        f'<tr><td class="nm">{_esc(c)}</td><td>'
-        + (_word_at("automated at build time") if a else _word_below("human step"))
-        + '</td></tr>'
-        for c, a in _HYGIENE_CHECKS)
-    return (
-        '<div class="card"><h2>AI &amp; Operational Excellence</h2>'
-        '<p class="sub">Using AI to run GRC. Governing AI lives under Governance, not here. '
-        'Deterministic checks (dates, SLA, coverage) stay separate from AI-assisted steps; AI '
-        'proposes, a human ratifies — it never writes the record unaided.</p>'
-        '<h4>Automation roadmap — honest, not shipped</h4>'
-        '<table class="tbl"><thead><tr><th>Initiative (docs/next-steps.md)</th><th>Stage</th>'
-        f'<th>Metric it would move</th></tr></thead><tbody>{road_rows}</tbody></table>'
-        f'<h4>Self-reported vs found</h4><p class="lede">Finding sources (all {n} findings): {src}. '
-        '<b>Small n</b> — a ratio, not a rate. Never collapsed to a two-way.</p>'
-        f'<h4>Hygiene automation</h4><p class="lede"><b>{len(auto)}/{len(_HYGIENE_CHECKS)}</b> of the '
-        'listed hygiene checks run deterministically at build time (anchored to the metrics above, '
-        'not "hours saved"):</p>'
-        '<table class="tbl"><thead><tr><th>Check</th><th>Mode</th></tr></thead>'
-        f'<tbody>{check_rows}</tbody></table>'
-        '</div>')
-
-
-def _notes_card(e: GRCEngine) -> str:
-    return (
-        '<div class="card"><h2>Decisions &amp; next steps</h2>'
-        '<ul style="font-size:13px; line-height:1.7; margin:0; padding-left:18px">'
-        '<li><b>Two pages presented as tabs:</b> the eng dashboard and this page share a two-tab bar '
-        'and switch between each other. The isolation guarantee is unchanged — GRC data still cannot '
-        'move any eng number (the both-loaders render test enforces it); the tab bar is static chrome. '
-        'True in-page tabbing (one document hosting both) is still deferred.</li>'
-        '<li><b>Security posture:</b> static, read-only, public, synthetic — auth/RBAC intentionally '
-        'not applicable. <b>Revisit before pointing this at real risk data</b>: put auth or Vercel '
-        'Password Protection in front first.</li>'
-        '<li><b>WCAG contrast:</b> status trio verified on --bg/--surface (worst case 6.04:1, above '
-        'the 4.5:1 AA bar) — safe at the 10–12px labels. Standing item closed.</li>'
-        '<li><b>Pillar drill-downs</b> follow in later specs, same coverage / hygiene / SLA '
-        'grammar.</li>'
-        '</ul></div>')
+    head = ('<tr><th></th><th class="qcol">Doing its job?</th>'
+            '<th class="qcol">Efficient?</th><th class="qcol">Adding value?</th></tr>')
+    body = ""
+    for name, q, cells in rows:
+        body += (f'<tr><td class="elname"><span class="en">{_esc(name)}</span>'
+                 f'<span class="eq">{_esc(q)}</span></td>'
+                 + "".join(_cell(*c) for c in cells) + "</tr>")
+    return f'<table class="grid"><thead>{head}</thead><tbody>{body}</tbody></table>'
 
 
 # ---------------------------------------------------------------------------
-# Page assembly (§1.D)
+# Team health (§2.3), OKR line (§2.4), wins (§2.5)
 # ---------------------------------------------------------------------------
 
 
-def build_grc_page(e: GRCEngine) -> str:
+def _team_health(e: QBREngine) -> str:
+    t = e.team_health()
+    roles = t["open_roles"]
+    role_html = " · ".join(
+        f'{_esc(title)} <b class="fig" style="font-size:13px">{age}d</b>' for title, age in roles
+    ) or "none open"
+    off = t["no_time_off"]
+    budget = t["dev_budget_pct"]
+    return (
+        '<div class="block"><h2>The team that runs it</h2>'
+        '<p class="why">Everything above measures the program. This measures the team behind it — '
+        'and it is the leading indicator for every number above.</p>'
+        '<div class="tri">'
+        f'<div class="card"><div class="k">Open roles &amp; how long</div>'
+        f'<div class="cap" style="margin-top:8px;color:var(--text)">{role_html}</div></div>'
+        f'<div class="card"><div class="k">No time off this quarter</div>'
+        f'<div class="fig" style="margin-top:6px">{off}</div>'
+        f'<div class="cap">of {t["headcount"]} — a count only, never a name</div></div>'
+        f'<div class="card"><div class="k">Development budget used</div>'
+        f'<div class="fig" style="margin-top:6px">{budget}%</div>'
+        f'<div class="cap">low use is the signal: the change budget is sitting unspent</div></div>'
+        '</div></div>')
+
+
+_THEME_LABEL = {"ai-native": "Make the program run itself", "scalable": "Scale with the business",
+                "foundational": "Get the basics current"}
+
+
+def _okr_line(e: QBREngine) -> str:
+    by_theme = e.okrs_by_theme()
+    parts = []
+    for theme, okrs in by_theme.items():
+        for okr in okrs:
+            krs = " · ".join(
+                f'{_esc(kr.get("title", ""))} <b>{kr.get("current_pct", 0)}%</b>'
+                f'<span style="color:var(--text-faint)">/{kr.get("target_pct", 0)}%</span>'
+                for kr in okr.get("key_results", []))
+            parts.append(f'<span class="obj">{_esc(okr.get("objective", ""))}</span> '
+                         f'<span class="kr">{krs}</span>')
+    inner = '<span style="flex-basis:100%;height:2px"></span>'.join(parts)
+    return (
+        '<div class="block"><h2>Where the program is heading</h2>'
+        '<p class="why">Progress on making the program run itself — which the grid above cannot show: '
+        'a program running well and changing not at all reads the same as one doing both.</p>'
+        f'<div class="okrline">{inner}</div></div>')
+
+
+def _wins(e: QBREngine) -> str:
+    cards = "".join(
+        f'<div class="win"><div class="team">{_esc(w.get("team", ""))}</div>'
+        f'<div class="txt">{_esc(w.get("text", ""))}</div></div>'
+        for w in e.wins())
+    return (
+        '<div class="block"><h2>Wins we can\'t measure</h2>'
+        '<p class="why">The three that mattered most this quarter — chosen for where the '
+        '<b>business</b> did something, not where we did.</p>'
+        f'<div class="wins">{cards}</div></div>')
+
+
+def _absent(e: QBREngine) -> str:
+    return (
+        '<div class="absent">'
+        '<b>What\'s deliberately not here.</b> How much risk we\'re carrying against tolerance lives on '
+        'the engineering profile — putting it here too would just start an argument about which number is '
+        'right. There is <b>no single program-health score</b>: a blend of coverage, speed, and reuse '
+        'would describe nothing. Vendor risk rides inside the coverage and control numbers above where '
+        'vendors sit in a business unit, rather than getting its own line. How fast we notice a brand-new '
+        'outside obligation is not tracked — a new one shows up above as a gap, but the speed of spotting '
+        'it needs a watchlist we do not yet keep.'
+        '</div>')
+
+
+# ---------------------------------------------------------------------------
+# Page
+# ---------------------------------------------------------------------------
+
+
+def build_qbr_page(e: QBREngine) -> str:
     body = (
         '<div class="wrap">'
         + _tab_bar("grc")
-        + '<header><div class="eyebrow">Company Corp</div>'
-        '<h1>GRC program health <span class="st st-below wip-tag">[WIP]</span></h1>'
-        '<div class="meta">For the GRC Manager · <b>synthetic data</b>, git-native YAML</div>'
+        + '<header><div class="eyebrow">Company Corp · GRC quarterly review</div>'
+        '<h1>GRC program review <span class="wip-tag">[WIP]</span></h1>'
+        f'<div class="meta">For the head of GRC · {e.period_key} · <b>synthetic data</b>, git-native YAML</div>'
+        '<p class="lede">Three questions, five ways: is the program doing its job, is it efficient, and '
+        'does it add value to the business? Read left to right for one program element; read a column '
+        'down for one question across the whole program.</p>'
         '</header>'
-        + _scorecard(e)
-        + _program_sla_strip(e)
-        + '<div class="grid">'
-        + _governance_card(e)
-        + _ai_governance_card(e)
-        + _risk_card(e)
-        + _compliance_card(e)
-        + _opex_card(e)
-        + _notes_card(e)
-        + '</div>'
-        '<footer>Every status carries its word; nothing rides on colour alone. Every coverage figure '
-        'names its denominator. Diagnostics only — nothing here moves residual; the one path stays the '
-        'exception register on the eng tab. Synthetic data; no live collectors. · '
-        f'<a href="{_REPO_URL}">Source on GitHub</a></footer>'
+        + _grid(e)
+        + _team_health(e)
+        + _okr_line(e)
+        + _wins(e)
+        + _absent(e)
+        + '<footer>Every figure names the set it is measured against; every status carries its word. '
+        'Nothing on this page changes the risk numbers on the engineering profile — it reads its own '
+        'records and is verified not to move them. Synthetic data; no live collectors.'
+        f' · <a href="{_REPO_URL}">Source on GitHub</a>'
+        '<div class="trace">The five elements map to the NIST Risk Management Framework '
+        '(SP 800-37 Rev 2) and ISO 31000.</div>'
+        '</footer>'
         '</div>')
     return (
         '<!doctype html><html lang="en"><head><meta charset="utf-8">'
         '<meta name="viewport" content="width=device-width, initial-scale=1">'
         '<meta name="robots" content="noindex, nofollow">'
-        '<title>Company Corp — GRC program health [WIP]</title>'
+        '<title>Company Corp — GRC program review [WIP]</title>'
         '<link rel="preconnect" href="https://fonts.googleapis.com">'
         '<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>'
         '<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&'
@@ -551,8 +344,8 @@ def build_grc_page(e: GRCEngine) -> str:
 
 
 def render_grc_to(data_dir: Path, config: Config, out: Path) -> Path:
-    """Load the extended corpus, compute the GRC derivations, render the tab."""
+    """Load the extended corpus, compute the QBR metrics, render the page."""
     graph = load_grc_graph(data_dir)
-    engine = GRCEngine(graph, config)
-    out.write_text(build_grc_page(engine))
+    engine = QBREngine(graph, config)
+    out.write_text(build_qbr_page(engine))
     return out
