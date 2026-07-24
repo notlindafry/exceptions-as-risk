@@ -3,6 +3,7 @@ type: exception
 title: Deferred PCI segmentation work -- staff on migration
 owner: payments-lead@company.com
 filed_on: 2026-05-18
+decided_on: 2026-05-22
 status: active
 mapped_scenarios: [SCN-2026-0004]
 control: [A.8.22]

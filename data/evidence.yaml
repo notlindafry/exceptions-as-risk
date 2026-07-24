@@ -7,7 +7,7 @@
 EV-IAM-0001:
   supports_controls: [A.8.5]
   source: idp-config-export
-  collection_method: api
+  collection_method: automated
   cadence: quarterly
   last_collected: 2026-04-15
 
@@ -21,42 +21,42 @@ EV-IAM-0002:
 EV-DLP-0001:
   supports_controls: [A.8.12]
   source: dlp-policy-export
-  collection_method: api
+  collection_method: automated
   cadence: monthly
   last_collected: 2026-06-01
 
 EV-BACKUP-0001:
   supports_controls: [A.8.13]
   source: backup-job-report
-  collection_method: api
+  collection_method: automated
   cadence: weekly
   last_collected: 2026-06-10
 
 EV-VULN-0001:
   supports_controls: [A.8.8]
   source: scanner-export
-  collection_method: api
+  collection_method: automated
   cadence: weekly
   last_collected: 2026-06-11
 
 EV-LOG-0001:
   supports_controls: [A.8.15, A.8.16]
   source: siem-coverage-report
-  collection_method: api
+  collection_method: automated
   cadence: monthly
   last_collected: 2026-05-28
 
 EV-CRYPTO-0001:
   supports_controls: [A.8.24]
   source: tls-scan
-  collection_method: api
+  collection_method: automated
   cadence: monthly
   last_collected: 2026-05-30
 
 EV-NET-0001:
   supports_controls: [A.8.20, A.8.22]
   source: firewall-ruleset-export
-  collection_method: api
+  collection_method: automated
   cadence: quarterly
   last_collected: 2026-03-20
 
@@ -77,7 +77,7 @@ EV-RESIDENCY-0001:
 EV-CHANGE-0001:
   supports_controls: [A.8.32]
   source: change-approval-export
-  collection_method: api
+  collection_method: automated
   cadence: monthly
   last_collected: null
 
@@ -98,6 +98,6 @@ EV-BACKUP-0002:
 EV-CODE-0001:
   supports_controls: [A.8.28, A.8.33]
   source: sast-coverage-report
-  collection_method: api
+  collection_method: automated
   cadence: monthly
   last_collected: 2026-06-03

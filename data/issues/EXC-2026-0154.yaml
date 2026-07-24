@@ -3,6 +3,7 @@ type: exception
 title: Deferred HA failover testing -- on-call pulled to migration
 owner: data-platform-lead@company.com
 filed_on: 2026-05-18
+decided_on: 2026-05-22
 status: active
 mapped_scenarios: [SCN-2026-0006]
 control: [A.8.14]

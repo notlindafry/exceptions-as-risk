@@ -3,6 +3,7 @@ type: exception
 title: Defer secondary reviewer on low-severity abuse queue
 owner: tns-lead@company.com
 filed_on: 2026-05-01
+decided_on: 2026-05-05
 status: active
 mapped_scenarios: [SCN-2026-0007]
 control: [A.8.16]

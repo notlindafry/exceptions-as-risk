@@ -3,6 +3,7 @@ type: exception
 title: Defer endpoint EDR upgrade on team laptops
 owner: it-lead@company.com
 filed_on: 2026-04-14
+decided_on: 2026-04-18
 status: active
 mapped_scenarios: [SCN-2026-0012]
 control: [A.8.7]

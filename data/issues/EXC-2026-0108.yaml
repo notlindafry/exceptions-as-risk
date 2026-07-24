@@ -3,6 +3,7 @@ type: exception
 title: Skip MFA on legacy reporting console
 owner: platform-lead@company.com
 filed_on: 2026-05-21
+decided_on: 2026-05-25
 status: active
 mapped_scenarios: [SCN-2026-0019]
 control: [A.8.5]

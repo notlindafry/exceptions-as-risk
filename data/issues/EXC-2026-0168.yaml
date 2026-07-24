@@ -3,6 +3,7 @@ type: exception
 title: Deferred schema-validation gate on a new pipeline writer
 owner: data-platform-lead@company.com
 filed_on: 2026-05-06
+decided_on: 2026-05-10
 status: active
 mapped_scenarios: [SCN-2026-0016]
 control: [A.8.33]

@@ -3,6 +3,7 @@ type: exception
 title: Relax session timeout on legacy admin portal
 owner: platform-lead@company.com
 filed_on: 2026-02-06
+decided_on: 2026-02-10
 status: active
 mapped_scenarios: [SCN-2026-0001]
 control: [A.8.5]

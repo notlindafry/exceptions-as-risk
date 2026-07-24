@@ -1,0 +1,14 @@
+# An audit / incident-PMAI / self-identified finding (SPEC §2.5). Carries a
+# bounded severity that informs control health and the residual NARRATIVE,
+# but is NOT simulated -- it never enters the residual bands. Synthetic.
+id: FND-2026-0009
+type: finding
+title: "Audit: DR runbook out of date after the failover redesign"
+owner: platform-lead@company.com
+filed_on: 2026-05-08
+status: resolved
+source: audit
+severity: low
+mapped_scenarios: [SCN-2026-0013]
+control: [A.5.30]
+closed_on: 2026-05-30

@@ -1,0 +1,14 @@
+# An audit / incident-PMAI / self-identified finding (SPEC §2.5). Carries a
+# bounded severity that informs control health and the residual NARRATIVE,
+# but is NOT simulated -- it never enters the residual bands. Synthetic.
+id: FND-2026-0007
+type: finding
+title: "Audit: log-retention window below policy on two services"
+owner: soc-office@company.com
+filed_on: 2026-05-19
+status: resolved
+source: audit
+severity: medium
+mapped_scenarios: [SCN-2026-0008]
+control: [A.8.16]
+closed_on: 2026-06-04

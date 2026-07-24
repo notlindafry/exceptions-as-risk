@@ -18,6 +18,10 @@ NR-PROD-COMPROMISE:
   threatens_okrs: [gcloud-migration, core-platform]
   last_reviewed: 2026-05-12
   review_cadence: annual
+  raised_on: 2025-11-03
+  source: grc
+  estate_units: [platform]
+  scored_on: 2025-11-18
 
 NR-DATA-EXFIL:
   title: Exfiltration of regulated data from an analytics or export path
@@ -29,6 +33,10 @@ NR-DATA-EXFIL:
   threatens_okrs: [data-platform]
   last_reviewed: 2026-04-21
   review_cadence: annual
+  raised_on: 2025-11-10
+  source: grc
+  estate_units: [data-platform]
+  scored_on: 2025-11-24
 
 NR-PAYMENT-FRAUD:
   title: Fraudulent transactions against the payments platform
@@ -40,6 +48,10 @@ NR-PAYMENT-FRAUD:
   threatens_okrs: [payments-launch]
   last_reviewed: 2026-03-17
   review_cadence: annual
+  raised_on: 2025-09-15
+  source: business
+  estate_units: [payments]
+  scored_on: 2025-09-30
 
 NR-ENDPOINT-MALWARE:
   title: Malware on a corporate endpoint leading to lateral movement
@@ -51,6 +63,10 @@ NR-ENDPOINT-MALWARE:
   threatens_okrs: [internal-tools]
   last_reviewed: 2026-02-09
   review_cadence: annual
+  raised_on: 2025-10-01
+  source: grc
+  estate_units: [corp-it]
+  scored_on: 2025-10-14
 
 NR-CARD-TESTING:
   title: Automated card-testing against the public checkout flow
@@ -62,6 +78,10 @@ NR-CARD-TESTING:
   threatens_okrs: [payments-launch]
   last_reviewed: 2026-03-17
   review_cadence: annual
+  raised_on: 2025-12-05
+  source: business
+  estate_units: [payments]
+  scored_on: 2025-12-19
 
 NR-ABUSE-ESCALATION:
   title: Unmitigated abuse escalating on the platform
@@ -73,6 +93,10 @@ NR-ABUSE-ESCALATION:
   threatens_okrs: [trust-and-safety]
   last_reviewed: 2026-01-28
   review_cadence: annual
+  raised_on: 2025-10-20
+  source: grc
+  estate_units: [trust-and-safety]
+  scored_on: 2025-11-05
 
 NR-ABUSE-DETECTION:
   title: Gaps in automated detection of policy-violating content
@@ -84,6 +108,10 @@ NR-ABUSE-DETECTION:
   threatens_okrs: [trust-and-safety]
   last_reviewed: 2026-01-28
   review_cadence: annual
+  raised_on: 2025-10-20
+  source: grc
+  estate_units: [trust-and-safety]
+  scored_on: 2025-11-06
 
 NR-PLATFORM-OUTAGE:
   title: Customer-facing outage of a core platform service
@@ -95,6 +123,10 @@ NR-PLATFORM-OUTAGE:
   threatens_okrs: [core-platform]
   last_reviewed: 2026-05-06
   review_cadence: annual
+  raised_on: 2026-05-06
+  source: business
+  estate_units: [platform]
+  scored_on: 2026-05-21
 
 NR-DATA-AVAILABILITY:
   title: Loss of availability of a core data platform service
@@ -106,6 +138,10 @@ NR-DATA-AVAILABILITY:
   threatens_okrs: [data-platform]
   last_reviewed: 2026-02-25
   review_cadence: annual
+  raised_on: 2026-01-14
+  source: grc
+  estate_units: [data-platform]
+  scored_on: 2026-01-27
 
 NR-DATA-QUALITY:
   title: Corrupted or unvalidated data feeding downstream decisions
@@ -117,6 +153,10 @@ NR-DATA-QUALITY:
   threatens_okrs: [data-platform]
   last_reviewed: 2026-02-25
   review_cadence: annual
+  raised_on: 2026-02-25
+  source: grc
+  estate_units: [data-platform]
+  scored_on: 2026-03-10
 
 NR-PIPELINE-INTEGRITY:
   title: Schema-invalid or corrupted writes entering the data pipeline
@@ -128,6 +168,10 @@ NR-PIPELINE-INTEGRITY:
   threatens_okrs: [data-platform]
   last_reviewed: 2026-02-25
   review_cadence: annual
+  raised_on: 2026-02-25
+  source: business
+  estate_units: [data-platform]
+  scored_on: 2026-03-11
 
 NR-DATA-RESIDENCY:
   title: Regulated customer data processed or stored outside its required region
@@ -139,6 +183,10 @@ NR-DATA-RESIDENCY:
   threatens_okrs: [data-platform, data-residency]
   last_reviewed: 2026-04-08
   review_cadence: annual
+  raised_on: 2026-04-08
+  source: business
+  estate_units: [privacy-legal]
+  scored_on: 2026-04-19
 
 NR-SUBPROCESSOR-GOV:
   title: Ungoverned subprocessor handling of regulated data
@@ -150,6 +198,10 @@ NR-SUBPROCESSOR-GOV:
   threatens_okrs: [data-platform]
   last_reviewed: 2026-04-08
   review_cadence: annual
+  raised_on: 2026-01-20
+  source: grc
+  estate_units: [privacy-legal]
+  scored_on: 2026-02-03
 
 NR-DATA-RETENTION:
   title: Personal data retained beyond its lawful retention window
@@ -161,6 +213,10 @@ NR-DATA-RETENTION:
   threatens_okrs: [data-platform]
   last_reviewed: 2025-05-14
   review_cadence: annual
+  raised_on: 2025-05-01
+  source: grc
+  estate_units: [privacy-legal]
+  scored_on: 2025-05-14
 
 NR-CONSENT-MGMT:
   title: Tracking or processing without valid, current consent
@@ -172,6 +228,10 @@ NR-CONSENT-MGMT:
   threatens_okrs: [mobile-app]
   last_reviewed: 2025-06-02
   review_cadence: annual
+  raised_on: 2025-06-01
+  source: grc
+  estate_units: [privacy-legal]
+  scored_on: 2025-06-15
 
 NR-PII-MINIMIZATION:
   title: Collecting or exposing more personal data than needed
@@ -183,6 +243,10 @@ NR-PII-MINIMIZATION:
   threatens_okrs: [data-platform]
   last_reviewed: 2026-04-08
   review_cadence: annual
+  raised_on: 2026-04-08
+  source: grc
+  estate_units: [privacy-legal]
+  scored_on: 2026-04-20
 
 NR-MIGRATION-AVAILABILITY:
   title: Availability regressions introduced by the migration
@@ -194,6 +258,10 @@ NR-MIGRATION-AVAILABILITY:
   threatens_okrs: [gcloud-migration]
   last_reviewed: 2026-05-20
   review_cadence: annual
+  raised_on: 2026-05-20
+  source: grc
+  estate_units: [platform]
+  scored_on: 2026-06-05
 
 NR-MIGRATION-DATAINTEGRITY:
   title: Data integrity loss during monolith-to-microservices cutover
@@ -205,6 +273,10 @@ NR-MIGRATION-DATAINTEGRITY:
   threatens_okrs: [gcloud-migration]
   last_reviewed: 2026-05-20
   review_cadence: annual
+  raised_on: 2026-05-20
+  source: business
+  estate_units: [platform, data-platform]
+  scored_on: 2026-06-03
 
 NR-AI-AGENT-AUTONOMY:
   title: Autonomous agents taking unsafe action in production
@@ -216,6 +288,10 @@ NR-AI-AGENT-AUTONOMY:
   threatens_okrs: [ai-platform]
   last_reviewed: 2026-06-02
   review_cadence: annual
+  raised_on: 2026-04-10
+  source: business
+  estate_units: [ai-platform]
+  scored_on: 2026-04-22
 
 NR-VENDOR-ACCESS:
   title: Excessive third-party vendor access to internal systems
@@ -227,6 +303,10 @@ NR-VENDOR-ACCESS:
   threatens_okrs: [mobile-app, internal-tools]
   last_reviewed: 2026-03-30
   review_cadence: annual
+  raised_on: 2025-12-10
+  source: grc
+  estate_units: [corp-it]
+  scored_on: 2025-12-22
 
 NR-SUPPLIER-OUTAGE:
   title: A critical supplier's outage cascades into our service
@@ -238,6 +318,10 @@ NR-SUPPLIER-OUTAGE:
   threatens_okrs: [core-platform]
   last_reviewed: 2026-03-30
   review_cadence: annual
+  raised_on: 2025-12-10
+  source: grc
+  estate_units: [platform]
+  scored_on: 2025-12-23
 
 NR-MODEL-SUPPLY:
   title: Concentration on a single external model provider
@@ -249,6 +333,10 @@ NR-MODEL-SUPPLY:
   threatens_okrs: [ai-platform]
   last_reviewed: 2026-06-02
   review_cadence: annual
+  raised_on: 2026-04-15
+  source: business
+  estate_units: [ai-platform]
+  scored_on: 2026-05-02
 
 NR-PCI-SCOPE:
   title: PCI scope expansion / cardholder data handling gap
@@ -260,6 +348,10 @@ NR-PCI-SCOPE:
   threatens_okrs: [payments-launch]
   last_reviewed: 2026-04-15
   review_cadence: annual
+  raised_on: 2026-01-05
+  source: grc
+  estate_units: [payments]
+  scored_on: 2026-01-19
 
 NR-REG-FILINGS:
   title: Missed regulatory filing or lapsed certification
@@ -271,6 +363,10 @@ NR-REG-FILINGS:
   threatens_okrs: [run-the-business]
   last_reviewed: 2026-04-15
   review_cadence: annual
+  raised_on: 2025-11-15
+  source: grc
+  estate_units: [privacy-legal]
+  scored_on: 2025-11-29
 
 NR-AI-DISCLOSURE:
   title: Undisclosed AI-generated content in regulated external communications
@@ -282,3 +378,6 @@ NR-AI-DISCLOSURE:
   threatens_okrs: []
   last_reviewed: 2026-06-02
   review_cadence: annual
+  raised_on: 2026-06-02
+  source: grc
+  estate_units: [ai-platform]
