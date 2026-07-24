@@ -619,11 +619,14 @@ class QBREngine:
             age = (self.as_of - opened).days if isinstance(opened, dt.date) else None
             roles.append((str(r.get("title", "")), age))
         roles.sort(key=lambda t: (t[1] is not None, t[1]), reverse=True)
+        head = int(team.get("headcount", 0) or 0)
+        prof_dev = int(team.get("prof_dev_requests", 0) or 0)
         return {
             "open_roles": roles,
             "no_time_off": int(team.get("no_time_off_count", 0) or 0),
-            "dev_budget_pct": int(team.get("dev_budget_used_pct", 0) or 0),
-            "headcount": int(team.get("headcount", 0) or 0),
+            "prof_dev_requests": prof_dev,
+            "prof_dev_pct": round(prof_dev / head * 100) if head else 0,
+            "headcount": head,
         }
 
     def okrs_by_theme(self) -> dict[str, list]:

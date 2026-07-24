@@ -2097,7 +2097,7 @@ PROGRAM_PERIOD = """\
       - {title: "Risk analyst", opened_on: 2026-02-04}
       - {title: "Controls engineer", opened_on: 2026-04-19}
     no_time_off_count: 1
-    dev_budget_used_pct: 38
+    prof_dev_requests: 2           # people who filed a professional-development reimbursement
   # Wins we can't measure (§2.5): AI-harvested candidates, a human picked three.
   # Prefer wins where the BUSINESS did something. Each names a team + a specific
   # thing; where it explains a number that moved, it says so.
@@ -2114,7 +2114,7 @@ PROGRAM_PERIOD = """\
     open_roles:
       - {title: "Risk analyst", opened_on: 2026-02-04}
     no_time_off_count: 0
-    dev_budget_used_pct: 25
+    prof_dev_requests: 1
 """
 
 # §1.F grc_okrs.yaml — the GRC team's own OKRs, separate from business okrs.yaml
