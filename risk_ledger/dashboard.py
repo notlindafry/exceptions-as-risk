@@ -1185,7 +1185,7 @@ _ANALYTICS = (
 )
 
 _TAB_ENG = "Engineering Org GRC Profile"
-_TAB_GRC = 'GRC program health<span class="tab-wip">[WIP]</span>'
+_TAB_GRC = 'GRC QBR<span class="tab-wip">[WIP]</span>'
 
 
 def _tab_bar(active: str) -> str:

@@ -311,7 +311,7 @@ def build_qbr_page(e: QBREngine) -> str:
         '<div class="wrap">'
         + _tab_bar("grc")
         + '<header><div class="eyebrow">Company Corp · GRC quarterly review</div>'
-        '<h1>GRC program review <span class="wip-tag">[WIP]</span></h1>'
+        '<h1>GRC QBR <span class="wip-tag">[WIP]</span></h1>'
         f'<div class="meta">For the head of GRC · {e.period_key} · <b>synthetic data</b>, git-native YAML</div>'
         '<p class="lede">Three questions, five ways: is the program doing its job, is it efficient, and '
         'does it add value to the business? Read left to right for one program element; read a column '
@@ -334,7 +334,7 @@ def build_qbr_page(e: QBREngine) -> str:
         '<!doctype html><html lang="en"><head><meta charset="utf-8">'
         '<meta name="viewport" content="width=device-width, initial-scale=1">'
         '<meta name="robots" content="noindex, nofollow">'
-        '<title>Company Corp — GRC program review [WIP]</title>'
+        '<title>Company Corp — GRC QBR [WIP]</title>'
         '<link rel="preconnect" href="https://fonts.googleapis.com">'
         '<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>'
         '<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&'
