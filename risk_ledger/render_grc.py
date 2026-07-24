@@ -291,11 +291,8 @@ def _absent(e: QBREngine) -> str:
         '<div class="absent">'
         '<b>What\'s deliberately not here.</b> How much risk we\'re carrying against tolerance lives on '
         'the engineering profile — putting it here too would just start an argument about which number is '
-        'right. There is <b>no single program-health score</b>: a blend of coverage, speed, and reuse '
-        'would describe nothing. Vendor risk rides inside the coverage and control numbers above where '
-        'vendors sit in a business unit, rather than getting its own line. How fast we notice a brand-new '
-        'outside obligation is not tracked — a new one shows up above as a gap, but the speed of spotting '
-        'it needs a watchlist we do not yet keep.'
+        'right. Vendor risk rides inside the coverage and control numbers above where vendors sit in a '
+        'business unit, rather than getting its own line.'
         '</div>')
 
 

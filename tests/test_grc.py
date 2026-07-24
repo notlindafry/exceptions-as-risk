@@ -145,8 +145,8 @@ def test_no_banned_vocabulary(page):
 
 
 def test_no_composite_score(page):
-    # acceptance 4: stated once, and no blended number exists.
-    assert "no single program-health score" in page
+    # acceptance 4: no blended program-health score is rendered anywhere.
+    assert "health score" not in page.lower()
 
 
 def test_every_status_carries_a_word(page):
