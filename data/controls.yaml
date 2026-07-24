@@ -60,6 +60,7 @@
   theme: Organizational
   policy: POL-SECURE-DEV
   mapped_named_risks: [NR-PROD-COMPROMISE]
+  business_owner: security-eng-lead@company.com
 
 "A.5.9":
   title: Inventory of information and other associated assets
@@ -84,6 +85,8 @@
   theme: Organizational
   policy: POL-DATA-CLASSIFICATION
   mapped_named_risks: [NR-DATA-QUALITY]
+  business_owner: data-platform-lead@company.com
+  owner_confirmed_on: 2026-03-01
 
 "A.5.13":
   title: Labelling of information
@@ -96,12 +99,16 @@
   theme: Organizational
   policy: POL-DATA-CLASSIFICATION
   mapped_named_risks: [NR-DATA-EXFIL]
+  business_owner: security-eng-lead@company.com
+  owner_confirmed_on: 2024-10-15
 
 "A.5.15":
   title: Access control
   theme: Organizational
   policy: POL-ACCESS-CONTROL
   mapped_named_risks: [NR-PROD-COMPROMISE]
+  business_owner: security-eng-lead@company.com
+  owner_confirmed_on: 2026-03-01
 
 "A.5.16":
   title: Identity management
@@ -109,6 +116,8 @@
   policy: POL-ACCESS-CONTROL
   mapped_named_risks: [NR-PROD-COMPROMISE]
   framework_refs: [PCI-REQ-8]
+  business_owner: security-eng-lead@company.com
+  owner_confirmed_on: 2026-03-01
 
 "A.5.17":
   title: Authentication information
@@ -116,12 +125,16 @@
   policy: POL-ACCESS-CONTROL
   mapped_named_risks: [NR-PROD-COMPROMISE]
   framework_refs: [PCI-REQ-8]
+  business_owner: security-eng-lead@company.com
+  owner_confirmed_on: 2026-03-01
 
 "A.5.18":
   title: Access rights
   theme: Organizational
   policy: POL-ACCESS-CONTROL
   mapped_named_risks: [NR-PROD-COMPROMISE, NR-VENDOR-ACCESS]
+  business_owner: security-eng-lead@company.com
+  owner_confirmed_on: 2026-03-01
 
 "A.5.19":
   title: Information security in supplier relationships
@@ -129,6 +142,8 @@
   policy: POL-SUPPLIER
   mapped_named_risks: [NR-VENDOR-ACCESS]
   framework_refs: [DORA-P4-THIRD-PARTY-RISK]
+  business_owner: ciso-office@company.com
+  owner_confirmed_on: 2026-03-01
 
 "A.5.20":
   title: Addressing information security within supplier agreements
@@ -136,6 +151,8 @@
   policy: POL-SUPPLIER
   mapped_named_risks: [NR-VENDOR-ACCESS]
   framework_refs: [DORA-P4-THIRD-PARTY-RISK]
+  business_owner: ciso-office@company.com
+  owner_confirmed_on: 2026-03-01
 
 "A.5.21":
   title: Managing information security in the ICT supply chain
@@ -143,6 +160,8 @@
   policy: POL-SUPPLIER
   mapped_named_risks: [NR-MODEL-SUPPLY, NR-VENDOR-ACCESS]
   framework_refs: [DORA-P4-THIRD-PARTY-RISK]
+  business_owner: ai-platform-lead@company.com
+  owner_confirmed_on: 2026-03-01
 
 "A.5.22":
   title: Monitoring, review and change management of supplier services
@@ -150,12 +169,16 @@
   policy: POL-SUPPLIER
   mapped_named_risks: [NR-VENDOR-ACCESS]
   framework_refs: [DORA-P4-THIRD-PARTY-RISK]
+  business_owner: ciso-office@company.com
+  owner_confirmed_on: 2026-03-01
 
 "A.5.23":
   title: Information security for use of cloud services
   theme: Organizational
   policy: POL-SUPPLIER
   mapped_named_risks: [NR-PLATFORM-OUTAGE, NR-VENDOR-ACCESS]
+  business_owner: platform-lead@company.com
+  owner_confirmed_on: 2026-03-01
 
 "A.5.24":
   title: Information security incident management planning and preparation
@@ -163,12 +186,16 @@
   policy: POL-INCIDENT
   mapped_named_risks: [NR-PLATFORM-OUTAGE]
   framework_refs: [DORA-P2-INCIDENT-REPORTING]
+  business_owner: platform-lead@company.com
+  owner_confirmed_on: 2026-03-01
 
 "A.5.25":
   title: Assessment and decision on information security events
   theme: Organizational
   policy: POL-INCIDENT
   mapped_named_risks: [NR-PROD-COMPROMISE]
+  business_owner: security-eng-lead@company.com
+  owner_confirmed_on: 2026-03-01
 
 "A.5.26":
   title: Response to information security incidents
@@ -176,6 +203,8 @@
   policy: POL-INCIDENT
   mapped_named_risks: [NR-PROD-COMPROMISE]
   framework_refs: [DORA-P2-INCIDENT-REPORTING]
+  business_owner: security-eng-lead@company.com
+  owner_confirmed_on: 2026-03-01
 
 "A.5.27":
   title: Learning from information security incidents
@@ -194,6 +223,8 @@
   theme: Organizational
   policy: POL-BCP
   mapped_named_risks: [NR-PLATFORM-OUTAGE, NR-DATA-AVAILABILITY]
+  business_owner: platform-lead@company.com
+  owner_confirmed_on: 2026-03-01
 
 "A.5.30":
   title: ICT readiness for business continuity
@@ -201,12 +232,16 @@
   policy: POL-BCP
   mapped_named_risks: [NR-PLATFORM-OUTAGE]
   framework_refs: [DORA-P3-RESILIENCE-TESTING]
+  business_owner: platform-lead@company.com
+  owner_confirmed_on: 2026-03-01
 
 "A.5.31":
   title: Legal, statutory, regulatory and contractual requirements
   theme: Organizational
   policy: POL-COMPLIANCE
   mapped_named_risks: [NR-REG-FILINGS, NR-PCI-SCOPE]
+  business_owner: compliance-lead@company.com
+  owner_confirmed_on: 2026-03-01
 
 "A.5.32":
   title: Intellectual property rights
@@ -219,12 +254,16 @@
   theme: Organizational
   policy: POL-COMPLIANCE
   mapped_named_risks: [NR-REG-FILINGS]
+  business_owner: compliance-lead@company.com
+  owner_confirmed_on: 2026-03-01
 
 "A.5.34":
   title: Privacy and protection of personal identifiable information (PII)
   theme: Organizational
   policy: POL-PRIVACY
   mapped_named_risks: [NR-DATA-RESIDENCY, NR-SUBPROCESSOR-GOV]
+  business_owner: privacy-eng-lead@company.com
+  owner_confirmed_on: 2026-03-01
 
 "A.5.35":
   title: Independent review of information security
@@ -237,6 +276,8 @@
   theme: Organizational
   policy: POL-COMPLIANCE
   mapped_named_risks: [NR-PCI-SCOPE, NR-REG-FILINGS]
+  business_owner: payments-lead@company.com
+  owner_confirmed_on: 2026-03-01
 
 "A.5.37":
   title: Documented operating procedures
@@ -264,6 +305,8 @@
   theme: People
   policy: POL-HR-SECURITY
   mapped_named_risks: [NR-ENDPOINT-MALWARE]
+  business_owner: it-lead@company.com
+  owner_confirmed_on: 2026-03-01
 
 "A.6.4":
   title: Disciplinary process
@@ -390,24 +433,32 @@
   theme: Technological
   policy: POL-ACCESS-CONTROL
   mapped_named_risks: [NR-ENDPOINT-MALWARE]
+  business_owner: it-lead@company.com
+  owner_confirmed_on: 2026-03-01
 
 "A.8.2":
   title: Privileged access rights
   theme: Technological
   policy: POL-ACCESS-CONTROL
   mapped_named_risks: [NR-PROD-COMPROMISE]
+  business_owner: security-eng-lead@company.com
+  owner_confirmed_on: 2026-03-01
 
 "A.8.3":
   title: Information access restriction
   theme: Technological
   policy: POL-ACCESS-CONTROL
   mapped_named_risks: [NR-DATA-EXFIL]
+  business_owner: security-eng-lead@company.com
+  owner_confirmed_on: 2024-10-15
 
 "A.8.4":
   title: Access to source code
   theme: Technological
   policy: POL-SECURE-DEV
   mapped_named_risks: [NR-MIGRATION-DATAINTEGRITY]
+  business_owner: platform-lead@company.com
+  owner_confirmed_on: 2026-03-01
 
 "A.8.5":
   title: Secure authentication
@@ -415,18 +466,24 @@
   policy: POL-ACCESS-CONTROL
   mapped_named_risks: [NR-PROD-COMPROMISE]
   framework_refs: [PCI-REQ-8]
+  business_owner: security-eng-lead@company.com
+  owner_confirmed_on: 2026-03-01
 
 "A.8.6":
   title: Capacity management
   theme: Technological
   policy: POL-BCP
   mapped_named_risks: [NR-PLATFORM-OUTAGE, NR-DATA-AVAILABILITY]
+  business_owner: platform-lead@company.com
+  owner_confirmed_on: 2026-03-01
 
 "A.8.7":
   title: Protection against malware
   theme: Technological
   policy: POL-INFOSEC
   mapped_named_risks: [NR-ENDPOINT-MALWARE]
+  business_owner: it-lead@company.com
+  owner_confirmed_on: 2026-03-01
 
 "A.8.8":
   title: Management of technical vulnerabilities
@@ -434,42 +491,56 @@
   policy: POL-VULN-MGMT
   mapped_named_risks: [NR-PROD-COMPROMISE, NR-ENDPOINT-MALWARE]
   framework_refs: [DORA-P1-ICT-RISK-MGMT, DORA-P3-RESILIENCE-TESTING, PCI-REQ-11]
+  business_owner: security-eng-lead@company.com
+  owner_confirmed_on: 2026-03-01
 
 "A.8.9":
   title: Configuration management
   theme: Technological
   policy: POL-CHANGE-MGMT
   mapped_named_risks: [NR-MIGRATION-AVAILABILITY]
+  business_owner: platform-lead@company.com
+  owner_confirmed_on: 2026-03-01
 
 "A.8.10":
   title: Information deletion
   theme: Technological
   policy: POL-DATA-CLASSIFICATION
   mapped_named_risks: [NR-DATA-RESIDENCY]
+  business_owner: privacy-eng-lead@company.com
+  owner_confirmed_on: 2026-03-01
 
 "A.8.11":
   title: Data masking
   theme: Technological
   policy: POL-PRIVACY
   mapped_named_risks: [NR-DATA-RESIDENCY, NR-DATA-EXFIL]
+  business_owner: privacy-eng-lead@company.com
+  owner_confirmed_on: 2026-03-01
 
 "A.8.12":
   title: Data leakage prevention
   theme: Technological
   policy: POL-DATA-CLASSIFICATION
   mapped_named_risks: [NR-DATA-EXFIL]
+  business_owner: security-eng-lead@company.com
+  owner_confirmed_on: 2026-03-01
 
 "A.8.13":
   title: Information backup
   theme: Technological
   policy: POL-BCP
   mapped_named_risks: [NR-DATA-AVAILABILITY, NR-MIGRATION-DATAINTEGRITY]
+  business_owner: data-platform-lead@company.com
+  owner_confirmed_on: 2026-03-01
 
 "A.8.14":
   title: Redundancy of information processing facilities
   theme: Technological
   policy: POL-BCP
   mapped_named_risks: [NR-PLATFORM-OUTAGE]
+  business_owner: platform-lead@company.com
+  owner_confirmed_on: 2026-03-01
 
 "A.8.15":
   title: Logging
@@ -477,6 +548,8 @@
   policy: POL-LOGGING-MONITORING
   mapped_named_risks: [NR-ABUSE-DETECTION, NR-PROD-COMPROMISE]
   framework_refs: [DORA-P2-INCIDENT-REPORTING, PCI-REQ-10]
+  business_owner: tns-lead@company.com
+  owner_confirmed_on: 2026-03-01
 
 "A.8.16":
   title: Monitoring activities
@@ -484,6 +557,8 @@
   policy: POL-LOGGING-MONITORING
   mapped_named_risks: [NR-ABUSE-DETECTION, NR-CARD-TESTING]
   framework_refs: [PCI-REQ-10]
+  business_owner: tns-lead@company.com
+  owner_confirmed_on: 2026-03-01
 
 "A.8.17":
   title: Clock synchronization
@@ -496,66 +571,88 @@
   theme: Technological
   policy: POL-ACCESS-CONTROL
   mapped_named_risks: [NR-PROD-COMPROMISE]
+  business_owner: security-eng-lead@company.com
+  owner_confirmed_on: 2026-03-01
 
 "A.8.19":
   title: Installation of software on operational systems
   theme: Technological
   policy: POL-CHANGE-MGMT
   mapped_named_risks: [NR-ENDPOINT-MALWARE]
+  business_owner: it-lead@company.com
+  owner_confirmed_on: 2026-03-01
 
 "A.8.20":
   title: Networks security
   theme: Technological
   policy: POL-NETWORK
   mapped_named_risks: [NR-PROD-COMPROMISE]
+  business_owner: security-eng-lead@company.com
+  owner_confirmed_on: 2026-03-01
 
 "A.8.21":
   title: Security of network services
   theme: Technological
   policy: POL-NETWORK
   mapped_named_risks: [NR-PLATFORM-OUTAGE]
+  business_owner: platform-lead@company.com
+  owner_confirmed_on: 2026-03-01
 
 "A.8.22":
   title: Segregation of networks
   theme: Technological
   policy: POL-NETWORK
   mapped_named_risks: [NR-PROD-COMPROMISE]
+  business_owner: security-eng-lead@company.com
+  owner_confirmed_on: 2026-03-01
 
 "A.8.23":
   title: Web filtering
   theme: Technological
   policy: POL-NETWORK
   mapped_named_risks: [NR-ENDPOINT-MALWARE]
+  business_owner: it-lead@company.com
+  owner_confirmed_on: 2026-03-01
 
 "A.8.24":
   title: Use of cryptography
   theme: Technological
   policy: POL-CRYPTO
   mapped_named_risks: [NR-DATA-EXFIL, NR-DATA-RESIDENCY]
+  business_owner: security-eng-lead@company.com
+  owner_confirmed_on: 2026-03-01
 
 "A.8.25":
   title: Secure development life cycle
   theme: Technological
   policy: POL-SECURE-DEV
   mapped_named_risks: [NR-MIGRATION-DATAINTEGRITY]
+  business_owner: platform-lead@company.com
+  owner_confirmed_on: 2026-03-01
 
 "A.8.26":
   title: Application security requirements
   theme: Technological
   policy: POL-SECURE-DEV
   mapped_named_risks: [NR-CARD-TESTING]
+  business_owner: payments-lead@company.com
+  owner_confirmed_on: 2026-03-01
 
 "A.8.27":
   title: Secure system architecture and engineering principles
   theme: Technological
   policy: POL-SECURE-DEV
   mapped_named_risks: [NR-PROD-COMPROMISE]
+  business_owner: security-eng-lead@company.com
+  owner_confirmed_on: 2026-03-01
 
 "A.8.28":
   title: Secure coding
   theme: Technological
   policy: POL-SECURE-DEV
   mapped_named_risks: [NR-MIGRATION-DATAINTEGRITY]
+  business_owner: platform-lead@company.com
+  owner_confirmed_on: 2026-03-01
 
 "A.8.29":
   title: Security testing in development and acceptance
@@ -563,34 +660,46 @@
   policy: POL-SECURE-DEV
   mapped_named_risks: [NR-MIGRATION-AVAILABILITY]
   framework_refs: [PCI-REQ-11]
+  business_owner: platform-lead@company.com
+  owner_confirmed_on: 2026-03-01
 
 "A.8.30":
   title: Outsourced development
   theme: Technological
   policy: POL-SUPPLIER
   mapped_named_risks: [NR-MODEL-SUPPLY]
+  business_owner: ai-platform-lead@company.com
+  owner_confirmed_on: 2026-03-01
 
 "A.8.31":
   title: Separation of development, test and production environments
   theme: Technological
   policy: POL-CHANGE-MGMT
   mapped_named_risks: [NR-MIGRATION-AVAILABILITY]
+  business_owner: platform-lead@company.com
+  owner_confirmed_on: 2026-03-01
 
 "A.8.32":
   title: Change management
   theme: Technological
   policy: POL-CHANGE-MGMT
   mapped_named_risks: [NR-MIGRATION-AVAILABILITY, NR-MIGRATION-DATAINTEGRITY]
+  business_owner: platform-lead@company.com
+  owner_confirmed_on: 2026-03-01
 
 "A.8.33":
   title: Test information
   theme: Technological
   policy: POL-SECURE-DEV
   mapped_named_risks: [NR-DATA-QUALITY]
+  business_owner: data-platform-lead@company.com
+  owner_confirmed_on: 2026-03-01
 
 "A.8.34":
   title: Protection of information systems during audit testing
   theme: Technological
   policy: POL-COMPLIANCE
   mapped_named_risks: [NR-PCI-SCOPE]
+  business_owner: payments-lead@company.com
+  owner_confirmed_on: 2026-03-01
 

@@ -3,6 +3,7 @@ type: exception
 title: Temporary vendor access for analytics SDK
 owner: mobile-lead@company.com
 filed_on: 2024-11-18
+decided_on: 2024-11-22
 status: active
 mapped_scenarios: [SCN-2026-0011]
 control: [A.5.19]

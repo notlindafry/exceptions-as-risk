@@ -3,6 +3,7 @@ type: exception
 title: Reduced fraud-review staffing on off-peak checkout
 owner: payments-lead@company.com
 filed_on: 2026-05-09
+decided_on: 2026-05-13
 status: active
 mapped_scenarios: [SCN-2026-0015]
 control: [A.8.16]

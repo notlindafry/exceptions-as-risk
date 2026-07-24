@@ -1,0 +1,15 @@
+# An audit / incident-PMAI / self-identified finding (SPEC §2.5). Carries a
+# bounded severity that informs control health and the residual NARRATIVE,
+# but is NOT simulated -- it never enters the residual bands. Synthetic.
+id: FND-2026-0008
+type: finding
+title: "Self-identified: detection-model eval gate bypassed on a hotfix"
+owner: tns-lead@company.com
+filed_on: 2026-05-22
+status: resolved
+source: self-identified
+severity: medium
+mapped_scenarios: [SCN-2026-0008]
+control: [A.8.16]
+closed_on: 2026-06-09
+recurrence_of: FND-2025-0044

@@ -19,7 +19,13 @@ or standalone with ``python examples/generate_ecosystem.py``.
 
 from __future__ import annotations
 
+import datetime as dt
 from pathlib import Path
+
+
+def _plus_days(iso: str, n: int) -> str:
+    """ISO date + n days. Used to author paired decision/closure dates."""
+    return (dt.date.fromisoformat(iso) + dt.timedelta(days=n)).isoformat()
 
 ROOT = Path(__file__).resolve().parent.parent
 DATA = ROOT / "data"
@@ -391,7 +397,17 @@ CONTROL_FRAMEWORK_REFS = {
 }
 
 
+# QBR v4.0 §1.B: business ownership of a control lives in the business, not GRC.
+# A mapped control's business_owner is the lead who owns the risk it defends;
+# owner_confirmed_on is when they last re-affirmed it (drives metric 2c). Two
+# controls are deliberately stale (confirmed long ago) and A.5.8 is the hole —
+# a business_owner named but never confirmed (§1.G). All inert for eng.
+_OWNER_UNCONFIRMED = {"A.5.8"}                 # named but no owner_confirmed_on
+_OWNER_STALE = {"A.5.14", "A.8.3"}            # confirmed outside cadence
+
+
 def render_controls() -> str:
+    nr_owner = {t[0]: t[4] for t in NAMED_RISKS}
     out = [CONTROL_YAML_HEAD]
     for theme, titles in ANNEX_A.items():
         clause = _THEME_CLAUSE[theme]
@@ -411,6 +427,14 @@ def render_controls() -> str:
             frefs = CONTROL_FRAMEWORK_REFS.get(ref)
             if frefs:
                 entry += f"  framework_refs: [{', '.join(frefs)}]\n"
+            if risks:  # a control that defends a risk has a business owner
+                entry += f"  business_owner: {nr_owner.get(risks[0], '')}\n"
+                if ref in _OWNER_UNCONFIRMED:
+                    pass
+                elif ref in _OWNER_STALE:
+                    entry += "  owner_confirmed_on: 2024-10-15\n"
+                else:
+                    entry += "  owner_confirmed_on: 2026-03-01\n"
             out.append(entry)
         out.append("")
     return "\n".join(out)
@@ -583,6 +607,50 @@ NAMED_RISK_REVIEWS = {
     "NR-AI-DISCLOSURE": ("2026-06-02", "annual"),
 }
 
+# QBR v4.0 §1.B: per-risk lifecycle + business linkage.
+#   raised_on / scored_on -> the "time to understand" speed metric (1b);
+#   source (business | grc)  -> the "business-raised share" value metric (1c);
+#   estate_units             -> the coverage link (1a), populated with COARSE
+#                               BUSINESS UNITS (the borrowed denominator), not a
+#                               service inventory GRC would have to maintain.
+# The business unit 'mobile' is deliberately unreferenced here: the org ships
+# mobile (two mobile OKRs) but GRC owns no risk for it — the estate-coverage
+# gap (§1.G). scored_on is None for the deliberately-unscored NR-AI-DISCLOSURE.
+# All inert for the engineering build (land in .raw). Synthetic.
+NAMED_RISK_QBR = {
+    "NR-PROD-COMPROMISE": ("2025-11-03", "2025-11-18", "grc", ["platform"]),
+    "NR-DATA-EXFIL": ("2025-11-10", "2025-11-24", "grc", ["data-platform"]),
+    "NR-PAYMENT-FRAUD": ("2025-09-15", "2025-09-30", "business", ["payments"]),
+    "NR-ENDPOINT-MALWARE": ("2025-10-01", "2025-10-14", "grc", ["corp-it"]),
+    "NR-CARD-TESTING": ("2025-12-05", "2025-12-19", "business", ["payments"]),
+    "NR-ABUSE-ESCALATION": ("2025-10-20", "2025-11-05", "grc", ["trust-and-safety"]),
+    "NR-ABUSE-DETECTION": ("2025-10-20", "2025-11-06", "grc", ["trust-and-safety"]),
+    "NR-PLATFORM-OUTAGE": ("2026-05-06", "2026-05-21", "business", ["platform"]),
+    "NR-DATA-AVAILABILITY": ("2026-01-14", "2026-01-27", "grc", ["data-platform"]),
+    "NR-DATA-QUALITY": ("2026-02-25", "2026-03-10", "grc", ["data-platform"]),
+    "NR-PIPELINE-INTEGRITY": ("2026-02-25", "2026-03-11", "business", ["data-platform"]),
+    "NR-DATA-RESIDENCY": ("2026-04-08", "2026-04-19", "business", ["privacy-legal"]),
+    "NR-SUBPROCESSOR-GOV": ("2026-01-20", "2026-02-03", "grc", ["privacy-legal"]),
+    "NR-DATA-RETENTION": ("2025-05-01", "2025-05-14", "grc", ["privacy-legal"]),
+    "NR-CONSENT-MGMT": ("2025-06-01", "2025-06-15", "grc", ["privacy-legal"]),
+    "NR-PII-MINIMIZATION": ("2026-04-08", "2026-04-20", "grc", ["privacy-legal"]),
+    "NR-MIGRATION-AVAILABILITY": ("2026-05-20", "2026-06-05", "grc", ["platform"]),
+    "NR-MIGRATION-DATAINTEGRITY": ("2026-05-20", "2026-06-03", "business", ["platform", "data-platform"]),
+    "NR-AI-AGENT-AUTONOMY": ("2026-04-10", "2026-04-22", "business", ["ai-platform"]),
+    "NR-VENDOR-ACCESS": ("2025-12-10", "2025-12-22", "grc", ["corp-it"]),
+    "NR-SUPPLIER-OUTAGE": ("2025-12-10", "2025-12-23", "grc", ["platform"]),
+    "NR-MODEL-SUPPLY": ("2026-04-15", "2026-05-02", "business", ["ai-platform"]),
+    "NR-PCI-SCOPE": ("2026-01-05", "2026-01-19", "grc", ["payments"]),
+    "NR-REG-FILINGS": ("2025-11-15", "2025-11-29", "grc", ["privacy-legal"]),
+    "NR-AI-DISCLOSURE": ("2026-06-02", None, "grc", ["ai-platform"]),
+}
+
+# The coarse business-unit denominator (§2.2 feasibility rule: borrow, don't
+# build). Held once here; also seeded into program_period.yaml. 'mobile' is the
+# deliberate coverage gap. Labelled "business units" on the page.
+BUSINESS_UNITS = ["payments", "platform", "data-platform", "trust-and-safety",
+                  "privacy-legal", "ai-platform", "corp-it", "mobile"]
+
 NAMED_RISK_YAML_HEAD = """\
 # Tier 2 -- the owned, appetite-bearing risk (executive / VP altitude, SPEC §2.3).
 # Each names its Tier-1 domain (many-to-one), the accountable owner, the OKRs it
@@ -601,7 +669,8 @@ def render_named_risks() -> str:
     for nid, title, short_title, domain, owner, threshold, rationale, okrs in NAMED_RISKS:
         okr_render = "[" + ", ".join(okrs) + "]"
         reviewed, cadence = NAMED_RISK_REVIEWS[nid]
-        out.append(
+        raised_on, scored_on, source, units = NAMED_RISK_QBR[nid]
+        block = (
             f"{nid}:\n"
             f"  title: {title}\n"
             f"  short_title: {short_title}\n"
@@ -612,7 +681,13 @@ def render_named_risks() -> str:
             f"  threatens_okrs: {okr_render}\n"
             f"  last_reviewed: {reviewed}\n"
             f"  review_cadence: {cadence}\n"
+            f"  raised_on: {raised_on}\n"
+            f"  source: {source}\n"
+            f"  estate_units: [{', '.join(units)}]\n"
         )
+        if scored_on is not None:
+            block += f"  scored_on: {scored_on}\n"
+        out.append(block)
     return "\n".join(out)
 
 
@@ -885,14 +960,19 @@ CAL = ["r.chen@company.com", "j.okafor@company.com", "p.nguyen@company.com",
 def _exc(eid, title, owner, scn, control, moves, ci, est, *, filed_on, okr=None,
          reason="timeline", diverted_to=None, assets=None, mechanism="remediate_gap",
          target_date="2026-09-01", status="active", expires_on="2026-09-01",
-         renewals=0, justification_changed_last=None, non_plan=False):
-    """A self-contained v2 exception issue (type: exception)."""
+         renewals=0, justification_changed_last=None, non_plan=False, decided_offset=4):
+    """A self-contained v2 exception issue (type: exception).
+
+    ``decided_on`` (QBR §1.B, filed_on + decided_offset) pairs with filed_on for
+    the decision-speed metric (4b). Additive; inert for the engineering build.
+    """
     lines = [
         f"id: {eid}",
         "type: exception",
         f"title: {title}",
         f"owner: {owner}",
         f"filed_on: {filed_on}",
+        f"decided_on: {_plus_days(filed_on, decided_offset)}",
         f"status: {status}",
         f"mapped_scenarios: [{scn}]",
         f"control: [{control}]",
@@ -1092,7 +1172,29 @@ FINDINGS = [
     # action plan" tile catches something real.
     ("FND-2026-0006", "Self-identified: supply-chain security reviews not completed for two new vendors",
      "procurement-office@company.com", "self-identified", "medium", ["SCN-2026-0018"], ["A.5.21"], "2026-06-10"),
+    # QBR §1.B/§1.G: closed findings give the "problems that came back" metric (3c)
+    # a real denominator (findings closed this quarter), and FND-2026-0008 carries
+    # recurrence_of — a problem that had been closed before and returned. These
+    # are RESOLVED, so they are not open and do not touch engineering control
+    # health (verified the byte-gate holds after adding them).
+    ("FND-2026-0007", "Audit: log-retention window below policy on two services",
+     "soc-office@company.com", "audit", "medium", ["SCN-2026-0008"], ["A.8.16"], "2026-05-19"),
+    ("FND-2026-0008", "Self-identified: detection-model eval gate bypassed on a hotfix",
+     "tns-lead@company.com", "self-identified", "medium", ["SCN-2026-0008"], ["A.8.16"], "2026-05-22"),
+    ("FND-2026-0009", "Audit: DR runbook out of date after the failover redesign",
+     "platform-lead@company.com", "audit", "low", ["SCN-2026-0013"], ["A.5.30"], "2026-05-08"),
 ]
+
+# QBR §1.B: per-finding lifecycle for the recurrence metric (3c). status/closed_on
+# for findings resolved this quarter (the denominator); recurrence_of points at a
+# prior-quarter finding that had been closed and came back (the numerator). Only
+# RESOLVED findings carry these — resolved findings are excluded from engineering
+# control health, so this is inert for the byte-gate. Everything else stays open.
+FINDING_QBR = {
+    "FND-2026-0007": ("resolved", "2026-06-04", None),
+    "FND-2026-0008": ("resolved", "2026-06-09", "FND-2025-0044"),
+    "FND-2026-0009": ("resolved", "2026-05-30", None),
+}
 
 
 def render_accepted_vuln_exception(spec) -> str:
@@ -1104,7 +1206,8 @@ def render_accepted_vuln_exception(spec) -> str:
         "# is a first-line vulnerability-management signal, not a second-line risk",
         "# model fact). Folds into the mapped scenario's PoR. Synthetic.",
         f"id: {eid}", "type: exception", f"title: {title}", f"owner: {owner}",
-        f"filed_on: {est_on}", "status: active", f"mapped_scenarios: [{scn}]",
+        f"filed_on: {est_on}", f"decided_on: {_plus_days(est_on, 4)}",
+        "status: active", f"mapped_scenarios: [{scn}]",
         f"control: {controls_render}",
         "exception_effect:", f"  moves: {moves}",
         f"  with_exception_90ci: [{ci[0]}, {ci[1]}]", f"  estimated_by: {est_by}",
@@ -1120,14 +1223,21 @@ def render_finding(spec) -> str:
     (fid, title, owner, source, severity, scns, controls, filed) = spec
     scns_render = "[" + ", ".join(scns) + "]"
     controls_render = "[" + ", ".join(controls) + "]"
-    return "\n".join([
+    status, closed_on, recurrence_of = FINDING_QBR.get(fid, ("open", None, None))
+    lines = [
         "# An audit / incident-PMAI / self-identified finding (SPEC §2.5). Carries a",
         "# bounded severity that informs control health and the residual NARRATIVE,",
         "# but is NOT simulated -- it never enters the residual bands. Synthetic.",
         f"id: {fid}", "type: finding", f'title: "{title}"', f"owner: {owner}",
-        f"filed_on: {filed}", "status: open", f"source: {source}", f"severity: {severity}",
-        f"mapped_scenarios: {scns_render}", f"control: {controls_render}", "",
-    ])
+        f"filed_on: {filed}", f"status: {status}", f"source: {source}", f"severity: {severity}",
+        f"mapped_scenarios: {scns_render}", f"control: {controls_render}",
+    ]
+    if closed_on:
+        lines.append(f"closed_on: {closed_on}")
+    if recurrence_of:
+        lines.append(f"recurrence_of: {recurrence_of}")
+    lines.append("")
+    return "\n".join(lines)
 
 
 # ---------------------------------------------------------------------------
@@ -1415,20 +1525,20 @@ def build_remediations():
 # ---------------------------------------------------------------------------
 
 EVIDENCE = [
-    ("EV-IAM-0001", ["A.8.5"], "idp-config-export", "api", "quarterly", "2026-04-15"),
+    ("EV-IAM-0001", ["A.8.5"], "idp-config-export", "automated","quarterly", "2026-04-15"),
     ("EV-IAM-0002", ["A.8.2", "A.5.18"], "privileged-access-review", "manual", "quarterly", "2026-05-02"),
-    ("EV-DLP-0001", ["A.8.12"], "dlp-policy-export", "api", "monthly", "2026-06-01"),
-    ("EV-BACKUP-0001", ["A.8.13"], "backup-job-report", "api", "weekly", "2026-06-10"),
-    ("EV-VULN-0001", ["A.8.8"], "scanner-export", "api", "weekly", "2026-06-11"),
-    ("EV-LOG-0001", ["A.8.15", "A.8.16"], "siem-coverage-report", "api", "monthly", "2026-05-28"),
-    ("EV-CRYPTO-0001", ["A.8.24"], "tls-scan", "api", "monthly", "2026-05-30"),
-    ("EV-NET-0001", ["A.8.20", "A.8.22"], "firewall-ruleset-export", "api", "quarterly", "2026-03-20"),
+    ("EV-DLP-0001", ["A.8.12"], "dlp-policy-export", "automated","monthly", "2026-06-01"),
+    ("EV-BACKUP-0001", ["A.8.13"], "backup-job-report", "automated","weekly", "2026-06-10"),
+    ("EV-VULN-0001", ["A.8.8"], "scanner-export", "automated","weekly", "2026-06-11"),
+    ("EV-LOG-0001", ["A.8.15", "A.8.16"], "siem-coverage-report", "automated","monthly", "2026-05-28"),
+    ("EV-CRYPTO-0001", ["A.8.24"], "tls-scan", "automated","monthly", "2026-05-30"),
+    ("EV-NET-0001", ["A.8.20", "A.8.22"], "firewall-ruleset-export", "automated","quarterly", "2026-03-20"),
     ("EV-DR-0001", ["A.5.30"], "dr-test-report", "manual", "quarterly", "2025-11-01"),
     ("EV-RESIDENCY-0001", ["A.8.11", "A.5.34"], "data-residency-audit", "manual", "semiannual", "2025-08-15"),
-    ("EV-CHANGE-0001", ["A.8.32"], "change-approval-export", "api", "monthly", None),
+    ("EV-CHANGE-0001", ["A.8.32"], "change-approval-export", "automated","monthly", None),
     ("EV-SUPPLIER-0001", ["A.5.19", "A.5.20"], "vendor-attestation-register", "manual", "annual", "2026-01-10"),
     ("EV-BACKUP-0002", ["A.8.14"], "redundancy-drill-report", "manual", "quarterly", "2026-05-12"),
-    ("EV-CODE-0001", ["A.8.28", "A.8.33"], "sast-coverage-report", "api", "monthly", "2026-06-03"),
+    ("EV-CODE-0001", ["A.8.28", "A.8.33"], "sast-coverage-report", "automated","monthly", "2026-06-03"),
 ]
 
 EVIDENCE_HEAD = """\
@@ -1938,6 +2048,91 @@ REM_DIR = DATA / "remediations"
 
 GUARDRAIL_EVENTS_DIR = DATA / "guardrail_events"
 
+# ===========================================================================
+# QBR v4.0 — the three new hand-authored files (§1.D–§1.F). None is read by the
+# engineering build. All synthetic.
+# ===========================================================================
+
+# §1.D assurance_requests.yaml — a real log with real cardinality. Drives the
+# value row: how much is answered from material we already had (5a) and how fast
+# (5b). The story: most requests reuse existing artifacts; turnaround is a day
+# or two. One request is still open (excluded from the turnaround median).
+ASSURANCE_REQUESTS = """\
+# Customer / auditor / regulator / prospect assurance requests (QBR §1.D).
+# answered_from: existing = satisfied by an artifact we already had; bespoke =
+# net-new work. Turnaround is closed_on - received_on. Synthetic.
+
+- {id: AR-2026-0031, received_on: 2026-04-03, closed_on: 2026-04-04, requester_type: customer, answered_from: existing, artifact: soc2-report}
+- {id: AR-2026-0032, received_on: 2026-04-10, closed_on: 2026-04-12, requester_type: prospect, answered_from: existing, artifact: security-whitepaper}
+- {id: AR-2026-0033, received_on: 2026-04-18, closed_on: 2026-04-25, requester_type: auditor, answered_from: bespoke, artifact: access-review-evidence}
+- {id: AR-2026-0034, received_on: 2026-04-22, closed_on: 2026-04-23, requester_type: customer, answered_from: existing, artifact: soc2-report}
+- {id: AR-2026-0035, received_on: 2026-05-04, closed_on: 2026-05-06, requester_type: customer, answered_from: existing, artifact: pentest-summary}
+- {id: AR-2026-0036, received_on: 2026-05-09, closed_on: 2026-05-10, requester_type: prospect, answered_from: existing, artifact: security-whitepaper}
+- {id: AR-2026-0037, received_on: 2026-05-15, closed_on: 2026-05-22, requester_type: regulator, answered_from: bespoke, artifact: dora-mapping}
+- {id: AR-2026-0038, received_on: 2026-05-20, closed_on: 2026-05-21, requester_type: customer, answered_from: existing, artifact: soc2-report}
+- {id: AR-2026-0039, received_on: 2026-06-01, closed_on: 2026-06-02, requester_type: customer, answered_from: existing, artifact: subprocessor-list}
+- {id: AR-2026-0040, received_on: 2026-06-08, closed_on: 2026-06-09, requester_type: prospect, answered_from: existing, artifact: security-whitepaper}
+- {id: AR-2026-0041, received_on: 2026-06-11, closed_on: 2026-06-12, requester_type: customer, answered_from: existing, artifact: soc2-report}
+- {id: AR-2026-0042, received_on: 2026-06-16, closed_on: null, requester_type: auditor, answered_from: bespoke, artifact: control-walkthrough}
+"""
+
+# §1.E program_period.yaml — the ONLY file holding numbers that cannot be
+# re-derived from an --as-of date. One block per quarter; the head of GRC keeps
+# it. Two quarters seeded (§4) so every hand-kept number has a delta and the
+# consumer return rate (5c) is computable. consumers is a named list (a set
+# intersection gives the return rate); no_time_off_count is a COUNT, never a
+# name (§3 identifiability caution). 'mobile' is in the estate list but carries
+# no named risk — the coverage gap (§1.G).
+PROGRAM_PERIOD = """\
+# Hand-kept per-quarter numbers that cannot be recomputed from a reference date
+# (QBR §1.E). The head of GRC updates this once a quarter. Synthetic.
+
+2026-Q2:
+  estate_units: [payments, platform, data-platform, trust-and-safety, privacy-legal,
+                 ai-platform, corp-it, mobile]
+  consumers: [platform-eng, payments, legal, finance]   # non-GRC teams using GRC data
+  team:
+    headcount: 5
+    open_roles:
+      - {title: "Risk analyst", opened_on: 2026-02-04}
+      - {title: "Controls engineer", opened_on: 2026-04-19}
+    no_time_off_count: 1
+    dev_budget_used_pct: 38
+2026-Q1:
+  estate_units: [payments, platform, data-platform, trust-and-safety, privacy-legal,
+                 ai-platform, corp-it]
+  consumers: [platform-eng, legal]
+  team:
+    headcount: 5
+    open_roles:
+      - {title: "Risk analyst", opened_on: 2026-02-04}
+    no_time_off_count: 0
+    dev_budget_used_pct: 25
+"""
+
+# §1.F grc_okrs.yaml — the GRC team's own OKRs, separate from business okrs.yaml
+# (mixing them would corrupt the engineering profile's risk-footprint view).
+# All ai-native this half: the program is automating its own hygiene.
+GRC_OKRS = """\
+# GRC team OKRs (QBR §1.F). Separate from business okrs.yaml. theme is one of
+# ai-native | scalable | foundational. Progress is target vs current. Synthetic.
+
+- id: OKR-GRC-2026-H1-01
+  objective: "Make control evidence collect itself"
+  period_end: 2026-06-30
+  theme: ai-native
+  key_results:
+    - {title: "Evidence collected automatically", target_pct: 90, current_pct: 64}
+    - {title: "Controls with an automated test", target_pct: 40, current_pct: 22}
+- id: OKR-GRC-2026-H1-02
+  objective: "Take the human out of routine risk intake"
+  period_end: 2026-06-30
+  theme: ai-native
+  key_results:
+    - {title: "New risks AI-drafted before a person signs off", target_pct: 50, current_pct: 30}
+    - {title: "Findings auto-linked to a control", target_pct: 80, current_pct: 55}
+"""
+
 
 def build_ecosystem() -> None:
     """Write the full GRC-ecosystem corpus (the only corpus, post-retirement)."""
@@ -1966,6 +2161,11 @@ def build_ecosystem() -> None:
     (DATA / "agent_inventory.yaml").write_text(AGENT_INVENTORY)
     for did, text in GUARDRAIL_EVENTS.items():
         (GUARDRAIL_EVENTS_DIR / f"{did}.yaml").write_text(text)
+
+    # QBR v4.0 files (§1.D–§1.F). Never read by the eng build.
+    (DATA / "assurance_requests.yaml").write_text(ASSURANCE_REQUESTS)
+    (DATA / "program_period.yaml").write_text(PROGRAM_PERIOD)
+    (DATA / "grc_okrs.yaml").write_text(GRC_OKRS)
 
     for spec in SCENARIOS:
         (SCN / f"{spec[0]}.yaml").write_text(render_scenario(spec))

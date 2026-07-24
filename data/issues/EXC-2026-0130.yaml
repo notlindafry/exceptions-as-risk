@@ -3,6 +3,7 @@ type: exception
 title: Run core services single-region to cut infrastructure cost
 owner: platform-lead@company.com
 filed_on: 2026-04-20
+decided_on: 2026-04-24
 status: active
 mapped_scenarios: [SCN-2026-0013]
 control: [A.8.14]

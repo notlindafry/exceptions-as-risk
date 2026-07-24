@@ -3,6 +3,7 @@ type: exception
 title: Deferred residency tagging on a new export connector
 owner: data-platform-lead@company.com
 filed_on: 2026-04-16
+decided_on: 2026-04-20
 status: active
 mapped_scenarios: [SCN-2026-0014]
 control: [A.8.11]

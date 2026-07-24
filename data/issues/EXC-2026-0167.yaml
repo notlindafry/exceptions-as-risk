@@ -3,6 +3,7 @@ type: exception
 title: Skip dual-write verification during inventory cutover
 owner: platform-lead@company.com
 filed_on: 2026-04-18
+decided_on: 2026-04-22
 status: active
 mapped_scenarios: [SCN-2026-0010]
 control: [A.8.28]

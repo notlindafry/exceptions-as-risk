@@ -1,0 +1,17 @@
+# GRC team OKRs (QBR §1.F). Separate from business okrs.yaml. theme is one of
+# ai-native | scalable | foundational. Progress is target vs current. Synthetic.
+
+- id: OKR-GRC-2026-H1-01
+  objective: "Make control evidence collect itself"
+  period_end: 2026-06-30
+  theme: ai-native
+  key_results:
+    - {title: "Evidence collected automatically", target_pct: 90, current_pct: 64}
+    - {title: "Controls with an automated test", target_pct: 40, current_pct: 22}
+- id: OKR-GRC-2026-H1-02
+  objective: "Take the human out of routine risk intake"
+  period_end: 2026-06-30
+  theme: ai-native
+  key_results:
+    - {title: "New risks AI-drafted before a person signs off", target_pct: 50, current_pct: 30}
+    - {title: "Findings auto-linked to a control", target_pct: 80, current_pct: 55}

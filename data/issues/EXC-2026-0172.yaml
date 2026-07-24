@@ -7,6 +7,7 @@ type: exception
 title: Accepted deferred dependency patch on the checkout service
 owner: payments-lead@company.com
 filed_on: 2026-06-01
+decided_on: 2026-06-05
 status: active
 mapped_scenarios: [SCN-2026-0015]
 control: [A.8.8]

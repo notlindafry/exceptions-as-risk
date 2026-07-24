@@ -3,6 +3,7 @@ type: exception
 title: Defer MFA on internal feature-flag console
 owner: platform-lead@company.com
 filed_on: 2026-05-08
+decided_on: 2026-05-12
 status: active
 mapped_scenarios: [SCN-2026-0001]
 control: [A.8.5]

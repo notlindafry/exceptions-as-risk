@@ -3,6 +3,7 @@ type: exception
 title: Broad vendor VPN access retained on mobile build farm
 owner: mobile-lead@company.com
 filed_on: 2024-06-03
+decided_on: 2024-06-07
 status: active
 mapped_scenarios: [SCN-2026-0011]
 control: [A.5.18]

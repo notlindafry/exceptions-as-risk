@@ -3,6 +3,7 @@ type: exception
 title: DLP disabled on the analytics export path
 owner: data-platform-lead@company.com
 filed_on: 2026-05-02
+decided_on: 2026-05-06
 status: active
 mapped_scenarios: [SCN-2026-0002]
 control: [A.8.12]

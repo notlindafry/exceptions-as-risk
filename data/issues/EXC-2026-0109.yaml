@@ -3,6 +3,7 @@ type: exception
 title: Defer privileged-access review on migrated workloads
 owner: platform-lead@company.com
 filed_on: 2026-05-27
+decided_on: 2026-05-31
 status: active
 mapped_scenarios: [SCN-2026-0019]
 control: [A.8.2]

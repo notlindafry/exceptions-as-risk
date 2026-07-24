@@ -7,6 +7,7 @@ type: exception
 title: Accepted privilege-escalation CVE on the endpoint fleet
 owner: it-lead@company.com
 filed_on: 2026-05-22
+decided_on: 2026-05-26
 status: active
 mapped_scenarios: [SCN-2026-0012]
 control: [A.8.8, A.8.7]

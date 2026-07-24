@@ -1,0 +1,24 @@
+# Hand-kept per-quarter numbers that cannot be recomputed from a reference date
+# (QBR §1.E). The head of GRC updates this once a quarter. Synthetic.
+
+2026-Q2:
+  estate_units: [payments, platform, data-platform, trust-and-safety, privacy-legal,
+                 ai-platform, corp-it, mobile]
+  consumers: [platform-eng, payments, legal, finance]   # non-GRC teams using GRC data
+  team:
+    headcount: 5
+    open_roles:
+      - {title: "Risk analyst", opened_on: 2026-02-04}
+      - {title: "Controls engineer", opened_on: 2026-04-19}
+    no_time_off_count: 1
+    dev_budget_used_pct: 38
+2026-Q1:
+  estate_units: [payments, platform, data-platform, trust-and-safety, privacy-legal,
+                 ai-platform, corp-it]
+  consumers: [platform-eng, legal]
+  team:
+    headcount: 5
+    open_roles:
+      - {title: "Risk analyst", opened_on: 2026-02-04}
+    no_time_off_count: 0
+    dev_budget_used_pct: 25
